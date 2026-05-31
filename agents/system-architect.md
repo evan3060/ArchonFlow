@@ -85,7 +85,7 @@ In your analysis, always include a module dependency map:
 | {module} | {dependencies} | {consumers} | {paths} |
 ```
 
-This map is used by the `/build` and `/verify` skills for precision context injection — only relevant files are loaded into each agent's context.
+This map is used by the `/archonflow:build` and `/archonflow:verify` skills for precision context injection — only relevant files are loaded into each agent's context.
 
 ## Memory
 

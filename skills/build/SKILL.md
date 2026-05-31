@@ -155,4 +155,4 @@ Fix any issues inline.
 
 ## Next Step
 
-Invoke the `/verify` skill to audit the implementation against contracts.
+Invoke the `/archonflow:verify` skill to audit the implementation against contracts.

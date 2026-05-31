@@ -133,5 +133,5 @@ Directory structure created:
 
 Next steps:
 1. Place design files in design-references/ (if Mode A)
-2. Run /proposal to start the pipeline
+2. Run /archonflow:proposal to start the pipeline
 ```

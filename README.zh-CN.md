@@ -26,7 +26,7 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
 ```
 设计导出（任何工具）
         ↓
-  ┌─ /proposal ────────────────────────────────────────────┐
+  ┌─ /archonflow:proposal ─────────────────────────────────┐
   │  上下文探测           ← 全新项目 vs 增量功能              │
   │  需求澄清             ← 苏格拉底式问答                    │
   │  领域建模             ← 核心实体与关系                    │
@@ -132,12 +132,12 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 | 技能 | 命令 | 功能 |
 |------|------|------|
 | 初始化 | `/archonflow:init` | 创建目录结构、复制运行时文件、配置项目 |
-| 提案 | `/proposal` | 上下文感知问答 → 提案规格（全新/增量） |
-| 设计 | `/design` | 生成设计契约、API 契约、数据层、计划 |
-| 构建 | `/build` | TDD 实现（数据 → 后端 → 前端） |
-| 验证 | `/verify` | 两阶段审计 + Fix Loop + Arbiter |
-| 修复 | `/fix "<描述>"` | 定向 Bug 修复 + 审计验证 |
-| 状态 | `/status` | 显示流水线进度、评分、变更日志 |
+| 提案 | `/archonflow:proposal` | 上下文感知问答 → 提案规格（全新/增量） |
+| 设计 | `/archonflow:design` | 生成设计契约、API 契约、数据层、计划 |
+| 构建 | `/archonflow:build` | TDD 实现（数据 → 后端 → 前端） |
+| 验证 | `/archonflow:verify` | 两阶段审计 + Fix Loop + Arbiter |
+| 修复 | `/archonflow:fix "<描述>"` | 定向 Bug 修复 + 审计验证 |
+| 状态 | `/archonflow:status` | 显示流水线进度、评分、变更日志 |
 
 ---
 
@@ -228,7 +228,7 @@ ArchonFlow 使用 Claude Code 原生 Subagent 系统。每个 Agent 在 `agents/
 /archonflow:init
 ```
 
-此命令自动创建目录结构、复制运行时文件并配置项目。之后即可使用 `/proposal` 或任何技能。
+此命令自动创建目录结构、复制运行时文件并配置项目。之后即可使用 `/archonflow:proposal` 或任何技能。
 
 ### 工作原理
 
@@ -587,7 +587,7 @@ ArchonFlow 通过自有的插件市场分发。先添加市场：
 ### 4. 启动流水线
 
 ```
-/proposal
+/archonflow:proposal
 ```
 
 流水线将引导你完成 proposal → design → build → verify。

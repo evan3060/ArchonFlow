@@ -220,4 +220,4 @@ Save to `archonflow/changes/{change-name}/verify-report.md`
 ## Next Step
 
 If all audits pass → project is ready for release.
-If any audit fails after max iterations → invoke `/fix` for targeted bug fixing.
+If any audit fails after max iterations → invoke `/archonflow:fix` for targeted bug fixing.

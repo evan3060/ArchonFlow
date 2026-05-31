@@ -240,4 +240,4 @@ Wait for user response. If changes requested, update spec and re-run self-review
 
 ## Next Step
 
-Invoke the `/design` skill to generate design contracts, API contracts, data layer contracts, and implementation plan.
+Invoke the `/archonflow:design` skill to generate design contracts, API contracts, data layer contracts, and implementation plan.

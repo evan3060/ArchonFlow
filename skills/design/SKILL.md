@@ -235,4 +235,4 @@ Wait for user response. Only proceed once user approves.
 
 ## Next Step
 
-Invoke the `/build` skill to implement the contracts using TDD.
+Invoke the `/archonflow:build` skill to implement the contracts using TDD.

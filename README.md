@@ -26,7 +26,7 @@ The same problem applies to backend APIs — contracts get written, but implemen
 ```
 Design Export (any tool)
         ↓
-  ┌─ /proposal ─────────────────────────────────────────────┐
+  ┌─ /archonflow:proposal ──────────────────────────────────┐
   │  Context Probe        ← Greenfield vs Incremental       │
   │  Requirements Q&A     ← Socratic clarification          │
   │  Domain Modeling      ← Core entities & relationships   │
@@ -132,12 +132,12 @@ No design tool exports available. You describe the page structure.
 | Skill | Command | What It Does |
 |-------|---------|-------------|
 | Init | `/archonflow:init` | Initialize directory structure, copy runtime files, configure project |
-| Proposal | `/proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
-| Design | `/design` | Generate design contracts, API contracts, data layer, plan |
-| Build | `/build` | Implement with TDD (data → backend → frontend) |
-| Verify | `/verify` | Two-stage audit with Fix Loop and Arbiter |
-| Fix | `/fix "<description>"` | Targeted bug fix with audit verification |
-| Status | `/status` | Show pipeline progress, scores, changelog |
+| Proposal | `/archonflow:proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
+| Design | `/archonflow:design` | Generate design contracts, API contracts, data layer, plan |
+| Build | `/archonflow:build` | Implement with TDD (data → backend → frontend) |
+| Verify | `/archonflow:verify` | Two-stage audit with Fix Loop and Arbiter |
+| Fix | `/archonflow:fix "<description>"` | Targeted bug fix with audit verification |
+| Status | `/archonflow:status` | Show pipeline progress, scores, changelog |
 
 ---
 
@@ -228,7 +228,7 @@ ArchonFlow uses Claude Code's native Subagent system. Each agent is defined in `
 /archonflow:init
 ```
 
-This creates the directory structure, copies runtime files, and configures the project. After that, use `/proposal` or any skill.
+This creates the directory structure, copies runtime files, and configures the project. After that, use `/archonflow:proposal` or any skill.
 
 ### How It Works
 
@@ -589,7 +589,7 @@ This automatically creates the directory structure, copies runtime files (config
 ### 4. Start Pipeline
 
 ```
-/proposal
+/archonflow:proposal
 ```
 
 The pipeline will guide you through proposal → design → build → verify.
