@@ -1,11 +1,11 @@
 ---
 name: proposal
-description: "Collect requirements and decide design source. First step in the ArchonFlow pipeline — identifies design exports and maps them to pages."
+description: "Collect requirements and create a proposal spec. First step in the ArchonFlow pipeline — context-aware for both greenfield and incremental projects. Uses Change-Based tracking."
 ---
 
 # Proposal Skill
 
-Collect project requirements and identify design source files.
+Collect project requirements and create a proposal spec. Automatically detects greenfield vs incremental context.
 
 ## ArchonFlow Core Rules
 
@@ -16,75 +16,192 @@ Collect project requirements and identify design source files.
 
 ## Autonomous Execution
 
-This skill runs autonomously from start to finish. Do NOT:
+This skill runs autonomously except for user interaction points. Do NOT:
 - Ask "Should I scan for design files?" — SCAN AUTOMATICALLY
 - Ask "Should I continue?" — CONTINUE
-- Ask "Proceed to contract generation?" — PROCEED
-- Pause for user confirmation between steps
+- Pause for user confirmation between steps (except where explicitly noted)
 
 Only stop for:
-- **BLOCKED**: no design files found in the project
-- **AMBIGUITY**: multiple possible page mappings, need user clarification
-- **ALL PHASES COMPLETE**: present mapping result
+- **BLOCKED**: no design files found in the project (greenfield) and no user input
+- **AMBIGUITY**: multiple possible interpretations, need user clarification
+- **USER APPROVAL GATE**: Spec must be approved before proceeding
 
-Note: The mapping confirmation step (Phase 3) is the ONE exception where
-user input is required — the user must confirm or adjust the page-to-design
-mapping before proceeding.
+## Context Detection
 
-## When to Use
+At the start, detect the project context:
 
-Starting a new project or adding pages to an existing project. This is always the first skill in the pipeline.
+| Condition | Mode | Behavior |
+|-----------|------|----------|
+| `archonflow/changelog.md` does NOT exist | **Greenfield** | Deep Q&A (5-10 questions) |
+| `archonflow/changelog.md` exists | **Incremental** | Quick confirm (2-3 questions) |
 
 ## Process
 
-### Phase 1: Project Context
+### Phase 1: Context Probe
 
-Read `archonflow/config/project.config.json` to understand:
-- Project name and framework
-- Design source patterns
-- Existing pages
+1. Check if `archonflow/changelog.md` exists → determine mode
+2. Check `archonflow/specs/` for existing system specs (incremental)
+3. Check `archonflow/changes/` for active changes (incremental)
+4. Check `archonflow/memory/` for agent memories (incremental)
+5. Check `design-references/` for design files (auto-discovery)
+6. Read `archonflow/config/project.config.json` for project setup
 
-### Phase 2: Design Source Discovery
+### Phase 2: Requirements Clarification
 
-Scan the project for design export files using glob patterns from config:
-1. Search for HTML files matching `design-references/**/*.html`
-2. Search for screenshot files matching `design-references/**/*.{png,jpg,svg}`
-3. Identify each HTML file's page name (read `<title>`, `<h1>`, or content)
-4. Match screenshots to pages by name similarity
+#### Greenfield Mode (5-10 questions, one at a time)
 
-### Phase 3: Mapping Confirmation
+Ask one question at a time, prefer multiple choice:
+1. What is the project goal?
+2. Who are the target users?
+3. What are the core features?
+4. What is the preferred tech stack?
+5. What is the design source? (Figma / Sketch / Stitch / Description)
+6. What are the boundary conditions?
+7. What are the success criteria?
+8. Any non-functional requirements? (performance, security, accessibility)
+9. Any constraints or preferences?
+10. What is the priority order of features?
 
-Present the discovered mapping to the user:
+#### Incremental Mode (2-3 questions, one at a time)
 
+1. Feature description — what are you adding/changing?
+2. Impact scope — which existing pages/APIs are affected?
+3. Relationship to existing features — dependencies or conflicts?
+
+### Phase 3: Approach Proposal
+
+1. Propose 2-3 approaches with trade-offs
+2. Each approach includes: description, pros, cons, applicable scenarios
+3. Give recommended approach with reasoning
+4. User selects approach
+
+### Phase 4: Spec Generation
+
+Generate the proposal spec document.
+
+#### Greenfield Spec Structure
+
+```markdown
+# Proposal: {project-name}
+
+## Overview
+{project description}
+
+## Target Users
+{user personas}
+
+## Feature List
+1. {feature} — {description} (Priority: P0/P1/P2)
+
+## Tech Stack
+- Framework: {framework}
+- Language: {language}
+- Styling: {styling}
+- State Management: {state}
+- Backend: {backend}
+
+## Design Source
+- Tool: {figma/sketch/stitch/description}
+- Files: {file list or auto-discovery}
+
+## Pages
+| Page | Description | Priority |
+|------|-------------|----------|
+| {name} | {description} | P0/P1/P2 |
+
+## Success Criteria
+1. {criterion}
+2. {criterion}
+
+## Non-Functional Requirements
+- Performance: {requirement}
+- Security: {requirement}
+- Accessibility: WCAG 2.1 AA
 ```
-| Page Name | Design File | Screenshots |
-|-----------|-------------|-------------|
-| Analysis  | design-references/analysis.html | analysis-1.png, analysis-2.png |
-| Growth    | design-references/growth.html  | growth-1.png |
+
+#### Incremental Spec Structure
+
+```markdown
+# Proposal: {feature-name}
+
+## Feature Description
+{what is being added/changed}
+
+## Incremental Impact Analysis
+### New Pages/Components
+| Page/Component | Description |
+|----------------|-------------|
+| {name} | {description} |
+
+### Modified Existing Files
+| File | Change Type | Description |
+|------|------------|-------------|
+| {path} | ADD/MODIFY | {description} |
+
+### Affected APIs
+| Endpoint | Change Type | Description |
+|----------|------------|-------------|
+| {path} | ADD/MODIFY/DEPRECATE | {description} |
+
+## Dependencies
+- Depends on: {existing feature}
+- Blocks: {future feature}
+
+## Success Criteria
+1. {criterion}
+2. {criterion}
+
+## Regression Risk
+- Risk level: LOW/MEDIUM/HIGH
+- Affected areas: {list}
 ```
 
-Ask user to confirm or adjust the mapping. This is the only step that
-requires user input — the rest runs autonomously.
+Present spec in sections, get user confirmation after each section.
 
-### Phase 4: Save Mapping
+### Phase 5: Spec Self-Review
 
-Write confirmed mapping to `archonflow/contracts/design-source-map.json`:
+After generating the spec, perform self-review:
 
-```json
-{
-  "pages": {
-    "analysis": {
-      "designFile": "design-references/analysis.html",
-      "screenshots": ["design-references/analysis-1.png"]
-    }
-  }
-}
+1. **Placeholder scan** — any TBD, TODO, incomplete sections? Fix them
+2. **Internal consistency** — do any sections contradict each other?
+3. **Scope check** — is this focused enough for a single change, or needs decomposition?
+4. **Ambiguity check** — could any requirement be interpreted two ways? Make it explicit
+5. **Incremental checks** (if applicable):
+   - Conflict with existing specs in `archonflow/specs/`
+   - Breaking change assessment
+   - Regression risk validation
+
+Fix any issues inline. No need to re-review.
+
+### Phase 6: User Approval Gate
+
+Present the complete spec to the user:
+
+> "Spec written. Please review and let me know if you want to make any changes before we proceed to design."
+
+Wait for user response. If changes requested, update spec and re-run self-review. Only proceed once user approves.
+
+### Phase 7: Save and Track
+
+1. Create change directory: `archonflow/changes/{change-name}/`
+2. Save spec to: `archonflow/changes/{change-name}/proposal.md`
+3. Initialize `archonflow/changelog.md` if it doesn't exist
+4. Update `archonflow/changelog.md` with new entry:
+
+```markdown
+## YYYY-MM-DD — {change-name}
+- Type: greenfield / incremental
+- Status: 📋 Proposed
+- Proposal: archonflow/changes/{change-name}/proposal.md
 ```
+
+5. Git commit
 
 ## Output
 
-- `archonflow/contracts/design-source-map.json` — page-to-design mapping
+- `archonflow/changes/{change-name}/proposal.md` — proposal spec
+- `archonflow/changelog.md` — updated changelog
 
 ## Next Step
 
-Invoke the `contract` skill to generate design contracts for each mapped page.
+Invoke the `/design` skill to generate design contracts, API contracts, data layer contracts, and implementation plan.

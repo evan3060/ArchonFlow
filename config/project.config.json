@@ -75,15 +75,22 @@
     "visualAudit": true,
     "uxAudit": true,
     "apiCompliance": true,
+    "backendAudit": true,
     "codeReview": true,
-    "maxRepairIterations": 3,
+    "maxFixIterations": 3,
 
     "gates": [
-      { "agent": "visualAuditor", "minScore": 95, "blocks": "uxCompliance" },
-      { "agent": "uxCompliance", "minVerdict": "CONDITIONAL", "blocks": "codeReviewer" },
+      { "agent": "visualAuditor", "minScore": 95, "blocks": "codeReviewer" },
+      { "agent": "apiCompliance", "minScore": 95, "blocks": "codeReviewer" },
+      { "agent": "uxCompliance", "minScore": 90, "blocks": "codeReviewer" },
       { "agent": "integrationChecker", "minScore": 90, "blocks": "codeReviewer" },
-      { "agent": "codeReviewer", "minVerdict": "APPROVE", "blocks": "deployment" }
-    ]
+      { "agent": "backendAuditor", "minScore": 85, "blocks": "deployment" },
+      { "agent": "codeReviewer", "minScore": 85, "blocks": "deployment" }
+    ],
+
+    "twoStageReview": true,
+    "stage1": ["visualAuditor", "apiCompliance", "uxCompliance", "integrationChecker"],
+    "stage2": ["backendAuditor", "codeReviewer"]
   },
 
   "directories": {
@@ -93,21 +100,28 @@
     "composables": "src/composables/",
     "styles": "src/styles/",
     "tokens": "src/styles/tokens/",
-    "designContract": "archonflow/contracts/",
+    "changes": "archonflow/changes/",
+    "specs": "archonflow/specs/",
+    "contracts": "archonflow/contracts/",
     "auditReports": "archonflow/audits/",
+    "visualReports": "archonflow/visual-reports/",
     "uxReports": "archonflow/ux-reports/",
     "reviewReports": "archonflow/reports/",
     "mockData": "archonflow/mock/",
-    "designReferences": "design-references/",
+    "memory": "archonflow/memory/",
     "templates": "archonflow/templates/",
-    "memory": "archonflow/memory/"
+    "designReferences": "design-references/",
+    "changelog": "archonflow/changelog.md"
   },
 
   "scoring": {
     "thresholds": {
-      "pass": 95,
-      "fixRequired": 85,
-      "reject": 0
+      "visual": 95,
+      "apiCompliance": 95,
+      "uxCompliance": 90,
+      "integration": 90,
+      "backendAudit": 85,
+      "codeReview": 85
     },
 
     "dimensions": {
@@ -119,11 +133,19 @@
       "shadow": { "weight": 0.05, "enabled": true }
     },
 
-    "backendDimensions": {
-      "schemaCompliance": { "weight": 0.40 },
+    "apiComplianceDimensions": {
+      "schemaCompliance": { "weight": 0.35 },
       "statusCodeAccuracy": { "weight": 0.20 },
-      "edgeCaseHandling": { "weight": 0.20 },
-      "dataIntegrity": { "weight": 0.20 }
+      "errorFormat": { "weight": 0.15 },
+      "authentication": { "weight": 0.15 },
+      "backwardCompatibility": { "weight": 0.15 }
+    },
+
+    "backendAuditDimensions": {
+      "security": { "weight": 0.30 },
+      "performance": { "weight": 0.25 },
+      "dataIntegrity": { "weight": 0.25 },
+      "errorHandling": { "weight": 0.20 }
     },
 
     "colorComparison": {
@@ -182,6 +204,10 @@
       "enabled": true,
       "additionalRules": []
     },
+    "dataArchitect": {
+      "enabled": true,
+      "additionalRules": []
+    },
     "mockServerGenerator": {
       "enabled": true,
       "additionalRules": []
@@ -194,17 +220,14 @@
     "frontendEngineer": {
       "enabled": true,
       "additionalRules": [],
-      "forbiddenPatterns": []
+      "forbiddenPatterns": [],
+      "tddRequired": true
     },
     "backendEngineer": {
       "enabled": true,
       "additionalRules": [],
-      "scope": "api-contract-layer-only"
-    },
-    "integrationChecker": {
-      "enabled": true,
-      "backendUrl": "http://localhost:3000",
-      "additionalRules": []
+      "scope": "api-contract-layer-only",
+      "tddRequired": true
     },
     "visualAuditor": {
       "enabled": true,
@@ -219,6 +242,19 @@
       "enabled": true,
       "accessibilityStandard": "WCAG-AA",
       "minTouchTarget": 44,
+      "additionalRules": []
+    },
+    "apiCompliance": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "integrationChecker": {
+      "enabled": true,
+      "backendUrl": "http://localhost:3000",
+      "additionalRules": []
+    },
+    "backendAuditor": {
+      "enabled": true,
       "additionalRules": []
     },
     "codeReviewer": {

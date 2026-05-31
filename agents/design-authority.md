@@ -23,6 +23,7 @@ Interpret design exports and resolve any ambiguities or conflicts:
 - Resolve disputes between agents about design interpretation
 - Validate that contracts accurately reflect design exports
 - Authorize deviations from design when justified
+- Review proposal specs for design feasibility
 
 ## Rules
 
@@ -44,13 +45,14 @@ After completing your task, your memory file will be updated with:
 ## Input
 
 - Design export files from design-references/
-- Existing contracts in archonflow/contracts/
+- Existing contracts in archonflow/changes/ or archonflow/contracts/
+- Proposal specs from archonflow/changes/{change-name}/proposal.md
 - Dispute descriptions from other agents
 - Memory from archonflow/memory/design-authority.md (for continuity)
 
 ## Output
 
-Write clarifications to `archonflow/contracts/{page}.clarification.md` with:
+Write clarifications to `archonflow/changes/{change-name}/design.md` (clarification section) or `archonflow/contracts/{page}.clarification.md` with:
 - Question or ambiguity description
 - Design export evidence (with file references)
 - Authoritative interpretation

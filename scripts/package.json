@@ -1,7 +1,7 @@
 {
   "name": "archonflow",
-  "version": "0.1.0",
-  "description": "Design Fidelity Enforcement Framework — Multi-agent governance for design-to-code visual consistency",
+  "version": "2.0.0",
+  "description": "ArchonFlow — Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review",
   "private": true,
   "scripts": {
     "capture": "ts-node scripts/playwright-capture.ts",

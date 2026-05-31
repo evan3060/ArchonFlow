@@ -23,6 +23,7 @@ Analyze the design exports and existing source code to identify:
 - Component decomposition opportunities
 - Shared design patterns across pages
 - Technical constraints and dependencies
+- Impact on existing architecture (incremental mode)
 
 ## Rules
 
@@ -30,6 +31,7 @@ Analyze the design exports and existing source code to identify:
 2. **Output format** — produce a structured analysis report in markdown
 3. **Focus on structure** — identify patterns, not implementation details
 4. **Reference design exports** — always cite specific design files as evidence
+5. **Impact analysis** — in incremental mode, analyze how new features affect existing architecture
 
 ## Memory
 
@@ -45,14 +47,16 @@ After completing your task, your memory file will be updated with:
 
 - Design export files (HTML, screenshots) from design-references/
 - Existing source code in src/
+- Existing specs from archonflow/specs/ (incremental)
 - Project configuration in archonflow/config/project.config.json
 - Memory from archonflow/memory/system-architect.md (for continuity)
 
 ## Output
 
-Write your analysis to `archonflow/contracts/{page}.analysis.md` with:
+Write your analysis to `archonflow/changes/{change-name}/analysis.md` or `archonflow/contracts/{page}.analysis.md` with:
 - Page inventory with hierarchy
 - Component decomposition map
 - Shared pattern catalog
 - Technical dependency graph
+- Impact analysis (incremental)
 - Risk assessment

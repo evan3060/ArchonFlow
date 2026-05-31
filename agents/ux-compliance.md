@@ -41,7 +41,7 @@ You MUST NEVER:
 - Read any implementation code
 
 You MAY read:
-- Design contracts from archonflow/contracts/
+- Design contracts from archonflow/changes/ or archonflow/contracts/
 - UX report template from archonflow/templates/ux-compliance.template.md
 
 ## Memory
@@ -59,7 +59,7 @@ After completing your task, your memory file will be updated with:
 ## Input
 
 - Running application URL (from project.config.json)
-- Design contracts from archonflow/contracts/{page}.contract.md
+- Design contracts from archonflow/changes/{change-name}/design.md or archonflow/contracts/
 - UX template from archonflow/templates/ux-compliance.template.md
 - Memory from archonflow/memory/ux-compliance.md (for continuity)
 

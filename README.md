@@ -1,6 +1,6 @@
 # ArchonFlow
 
-**Multi-Agent Full-Stack Delivery Pipeline** — A project-agnostic, multi-agent governance system that enforces design fidelity, API compliance, and code quality through cognitive isolation and contract-driven development.
+**Multi-Agent Full-Stack Delivery Pipeline** — A project-agnostic, multi-agent governance system with TDD, Change-Based Architecture, and Two-Stage Review. Enforces design fidelity, API compliance, and code quality through cognitive isolation and contract-driven development.
 
 [中文文档](./README.zh-CN.md)
 
@@ -26,38 +26,61 @@ The same problem applies to backend APIs — contracts get written, but implemen
 ```
 Design Export (any tool)
         ↓
-  ┌─ Contract Phase ─────────────────────────────────────────┐
-  │  System Architect     ← Architecture, modules, routing    │
-  │  Design Authority     ← Interprets design → Contract      │
-  │  Contract Generator   ← Extracts design tokens            │
-  │  API Architect        ← Designs API contract               │
-  │  Mock Server Generator← Creates deterministic mock data   │
-  └──────────────────────────────────────────────────────────┘
+  ┌─ /proposal ─────────────────────────────────────────────┐
+  │  Context Probe        ← Greenfield vs Incremental       │
+  │  Requirements Q&A     ← Socratic clarification          │
+  │  Approach Proposal    ← 2-3 options with trade-offs     │
+  │  Spec Generation      ← Proposal document               │
+  └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ Frontend Building ──────────────────────────────────────┐
-  │  Frontend Engineer    ← Implements from Contract only     │
-  │  Visual Auditor       ← Playwright + screenshot diff      │
-  │  UX Compliance        ← Interaction & accessibility       │
-  │  Code Reviewer        ← Code quality                      │
-  │  (Repair Loop: score < 95 → fix → re-audit)              │
-  └──────────────────────────────────────────────────────────┘
+  ┌─ /design ───────────────────────────────────────────────┐
+  │  System Architect     ← Architecture, modules, routing   │
+  │  Design Authority     ← Interprets design → Contract     │
+  │  Contract Generator   ← Design contracts (Given/When/Then)│
+  │  Data Architect       ← Database schema, migrations      │
+  │  API Architect        ← API contracts (Given/When/Then)  │
+  │  Design System Guardian← Token extraction & validation   │
+  │  Mock Server Generator← Deterministic mock data          │
+  │  Implementation Plan  ← Micro-task decomposition         │
+  └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ Backend Building ───────────────────────────────────────┐
-  │  Backend Engineer     ← Implements API contract layer     │
-  │  Integration Checker  ← API compliance testing            │
-  │  Code Reviewer        ← Code quality                      │
-  │  (Repair Loop: score < 90 → fix → re-test)               │
-  └──────────────────────────────────────────────────────────┘
+  ┌─ /build ────────────────────────────────────────────────┐
+  │  Backend Engineer     ← Data layer + API (TDD)           │
+  │  Frontend Engineer    ← UI implementation (TDD)          │
+  │  Integration Wiring   ← Frontend ↔ Backend connection    │
+  └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ Integration Audit ──────────────────────────────────────┐
-  │  Integration Checker  ← Full-stack API verification       │
-  │  Visual Auditor       ← End-to-end visual verification    │
-  │  UX Compliance        ← End-to-end UX verification        │
-  │  Code Reviewer        ← Final quality gate                 │
-  └──────────────────────────────────────────────────────────┘
+  ┌─ /verify ───────────────────────────────────────────────┐
+  │  Stage 1: Spec Compliance                               │
+  │    Visual Auditor      ← Visual fidelity (≥95)           │
+  │    API Compliance      ← API contract match (≥95)        │
+  │    UX Compliance       ← Interaction & a11y (≥90)        │
+  │    Integration Checker ← Frontend-backend (≥90)          │
+  │  Stage 2: Code Quality                                  │
+  │    Backend Auditor     ← Security, perf, data (≥85)      │
+  │    Code Reviewer       ← Code quality & patterns (≥85)   │
+  │  Fix Loop: fail → fix → re-audit (max 3 iterations)     │
+  └─────────────────────────────────────────────────────────┘
         ↓
   Ship
 ```
+
+---
+
+## What's New in v2.0
+
+| Feature | Description |
+|---------|-------------|
+| **TDD Discipline** | RED-GREEN-REFACTOR mandatory for all implementation |
+| **Change-Based Architecture** | Each feature/fix as independent Change folder |
+| **Two-Stage Review** | Spec compliance first, then code quality |
+| **Three Verification Dimensions** | Completeness, Correctness, Coherence |
+| **Behavioral Specs** | Given/When/Then format for all interactions |
+| **API Compliance Agent** | Dedicated API contract compliance auditing |
+| **Backend Auditor Agent** | Security, performance, data integrity auditing |
+| **Data Architect Agent** | Database schema and migration design |
+| **Unified Pipeline** | `/proposal → /design → /build → /verify → /fix → /status` |
+| **Agent Memory** | Persistent memory files for continuity across iterations |
 
 ---
 
@@ -106,44 +129,46 @@ No design tool exports available. You describe the page structure.
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| Proposal | `/proposal` | Socratic Q&A → project brief, design source decision |
-| Contract | `/contract <target>` | Generate all contracts (design + API + mock data) |
-| Frontend Building | `/frontend-building <target>` | Implement UI + visual audit + UX audit + code review |
-| Backend Building | `/backend-building <target>` | Implement API + compliance test + code review |
-| Integration Audit | `/integration-audit <target>` | Full-stack integration verification |
-| Bug Fix | `/bug-fix "<description>"` | Fix bugs with targeted repair + audit verification |
-| Status | `/status` | Show pipeline progress and scores |
+| Proposal | `/proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
+| Design | `/design` | Generate design contracts, API contracts, data layer, plan |
+| Build | `/build` | Implement with TDD (data → backend → frontend) |
+| Verify | `/verify` | Three-dimension audit with two-stage review |
+| Fix | `/fix "<description>"` | Targeted bug fix with audit verification |
+| Status | `/status` | Show pipeline progress, scores, changelog |
 
 ---
 
-## Agent Council — 12 Agents
+## Agent Council — 15 Agents
 
-### Contract Phase
+### Design Phase
 
 | Agent | Role | Sees | Never Sees |
 |-------|------|------|------------|
 | System Architect | Architecture design | contracts, src/ | design-references/ |
 | Design Authority | Design interpretation | design-references, contracts | src/ |
-| Contract Generator | Token extraction | contracts | src/, design-references/ |
-| API Architect | API contract design | contracts | src/, design-references/ |
+| Contract Generator | Design contracts (Given/When/Then) | contracts | src/, design-references/ |
+| Data Architect | Database schema & migrations | contracts | src/, design-references/ |
+| API Architect | API contracts (Given/When/Then) | contracts | src/, design-references/ |
 | Mock Server Generator | Mock data creation | contracts | src/, design-references/ |
-
-### Frontend Phase
-
-| Agent | Role | Sees | Never Sees |
-|-------|------|------|------------|
 | Design System Guardian | Token maintenance | contracts, tokens | components, pages |
-| Frontend Engineer | UI implementation | contracts, tokens, src, audits | design-references/ |
-| Visual Auditor | Visual fidelity | contracts, running app | **src/** |
-| UX Compliance | Interaction check | contracts, running app | **src/** |
-| Code Reviewer | Code quality | src/ | contracts, audits |
 
-### Backend Phase
+### Build Phase
 
 | Agent | Role | Sees | Never Sees |
 |-------|------|------|------------|
-| Backend Engineer | API implementation | contracts, mock, audits | design-references/, frontend src/ |
-| Integration Checker | API compliance | contracts, running server | **src/** |
+| Frontend Engineer | UI implementation (TDD) | contracts, tokens, src, audits | design-references/ |
+| Backend Engineer | API implementation (TDD) | contracts, mock, audits | design-references/, frontend src/ |
+
+### Verify Phase
+
+| Agent | Role | Sees | Never Sees |
+|-------|------|------|------------|
+| Visual Auditor | Visual fidelity | contracts, running app | **src/** |
+| API Compliance | API contract match | contracts, running app | **src/** |
+| UX Compliance | Interaction & a11y | contracts, running app | **src/** |
+| Integration Checker | Frontend-backend | contracts, running server | **src/** |
+| Backend Auditor | Security, perf, data | src/, contracts | — |
+| Code Reviewer | Code quality | src/, contracts | — |
 
 ---
 
@@ -203,7 +228,7 @@ your-project/.claude/
 │   ├── visual-auditor.md
 │   └── ...
 └── skills/             ← Pipeline skills (auto-discovered)
-    ├── contract/SKILL.md
+    ├── proposal/SKILL.md
     └── ...
 ```
 
@@ -222,78 +247,110 @@ When a Skill invokes `@agent-name`:
 
 | Agent | Tools | Can Write? | Key Restriction |
 |-------|-------|-----------|-----------------|
-| system-architect | Read, Grep, Glob, LS | ❌ | Read-only, no implementation |
-| design-authority | Read, Grep, Glob, LS | ❌ | Read-only, no implementation |
-| contract-generator | Read, Grep, Glob | ❌ | Read-only, no implementation |
-| api-architect | Read, Grep, Glob | ❌ | Read-only, no implementation |
+| system-architect | Read, Grep, Glob, LS | ❌ | Read-only |
+| design-authority | Read, Grep, Glob, LS | ❌ | Read-only |
+| contract-generator | Read, Grep, Glob | ❌ | Read-only |
+| data-architect | Read, Grep, Glob | ❌ | Read-only |
+| api-architect | Read, Grep, Glob | ❌ | Read-only |
 | mock-server-generator | Read, Grep, Glob, Write | ✅ mock/ | Only writes mock data |
 | design-system-guardian | Read, Grep, Glob, Write, Edit | ✅ tokens/ | Only writes tokens |
 | frontend-engineer | Read, Grep, Glob, LS, Write, Edit, Bash | ✅ src/ | Full dev tools |
 | backend-engineer | Read, Grep, Glob, LS, Write, Edit, Bash | ✅ backend/ | Full dev tools |
-| visual-auditor | Read, Grep, Glob, Bash | ❌ | **No Write/Edit — cannot modify code** |
-| ux-compliance | Read, Grep, Glob, Bash | ❌ | **No Write/Edit — cannot modify code** |
-| integration-checker | Read, Grep, Glob, Bash | ❌ | **No Write/Edit — cannot modify code** |
-| code-reviewer | Read, Grep, Glob | ❌ | **Read-only — review only** |
+| visual-auditor | Read, Grep, Glob, Bash | ❌ | **No Write/Edit** |
+| api-compliance | Read, Grep, Glob, Bash | ❌ | **No Write/Edit** |
+| ux-compliance | Read, Grep, Glob, Bash | ❌ | **No Write/Edit** |
+| integration-checker | Read, Grep, Glob, Bash | ❌ | **No Write/Edit** |
+| backend-auditor | Read, Grep, Glob, Bash | ❌ | **No Write/Edit** |
+| code-reviewer | Read, Grep, Glob | ❌ | **Read-only** |
 
 ### Agent Team Mode (Experimental)
 
 For parallel execution (e.g., building multiple pages simultaneously), you can request Agent Teams:
 
 ```
-Use team agents to build analysis, growth, and knowledge pages in parallel
+Use team agents for archonflow:build
 ```
 
-This spawns multiple Claude Code instances in tmux panes, each running the full frontend-building pipeline independently. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enabled.
+This spawns multiple Claude Code instances in tmux panes, each running independently. Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` enabled.
 
 ---
 
-## Design Contract
+## TDD Discipline (MANDATORY)
 
-The Design Contract is the **constitutional document** of the system. It's not a casual description — it's an executable specification that all agents must obey.
+All implementation agents follow RED-GREEN-REFACTOR:
 
-### Why Contracts?
+1. **RED** — Write a failing test that describes the expected behavior
+2. **Verify RED** — Run the test, confirm it fails for the right reason
+3. **GREEN** — Write the minimum code to make the test pass
+4. **Verify GREEN** — Run the test, confirm it passes; run ALL tests, confirm none broke
+5. **REFACTOR** — Clean up the code while keeping all tests green
+6. **Repeat** — Move to the next micro-task
 
-Without a Contract, every agent interprets the design export differently. The Contract eliminates ambiguity by being the single, authoritative interpretation.
+**If you wrote code before a test: delete the code and start from the test.**
 
-### Contract Structure
+---
+
+## Change-Based Architecture
+
+Each feature or fix is tracked as an independent Change:
+
+```
+archonflow/changes/{change-name}/
+├── proposal.md      ← Requirements spec
+├── analysis.md      ← Structural analysis
+├── design.md        ← Design contracts (Given/When/Then)
+├── api.md           ← API contracts (Given/When/Then)
+├── data.md          ← Data layer contracts
+├── plan.md          ← Implementation plan (micro-tasks)
+├── verify-report.md ← Verification results
+└── fix-report.md    ← Bug fix results (if any)
+```
+
+When a Change passes verification, it's archived to `archonflow/specs/`.
+
+The `archonflow/changelog.md` tracks all Changes with status progression:
+📋 Proposed → 🎨 Designed → 🔨 Built → ✅ Verified
+
+---
+
+## Two-Stage Review
+
+### Stage 1: Spec Compliance (Completeness + Correctness)
+
+Auditors test from the OUTSIDE — they never read source code.
+
+1. @visual-auditor — visual compliance vs design contract
+2. @api-compliance — API compliance vs API contract
+3. @ux-compliance — UX compliance vs design contract
+4. @integration-checker — frontend-backend integration
+
+All must PASS before Stage 2.
+
+### Stage 2: Code Quality (Coherence)
+
+Reviewers read source code for quality.
+
+5. @backend-auditor — backend security, performance, data integrity
+6. @code-reviewer — code quality, patterns, test coverage
+
+---
+
+## Behavioral Specs (Given/When/Then)
+
+All contracts use the Given/When/Then format for behavioral specifications:
 
 ```markdown
-# {Page Name} Design Contract
+### Requirement: Login button click
+The system SHALL navigate to the dashboard on successful login.
 
-## Metadata
-- Version, timestamp, design source, status
-
-## Design Tokens Used
-- Every color, spacing, radius, font, shadow referenced
-
-## Page Structure
-- Container specs → Section specs → Component specs → Element specs
-- Every visual property with exact value and token reference
-
-## Interaction States
-- For every interactive element: default, hover, focus, active, disabled
-
-## Responsive Behavior
-- Mobile / Tablet / Desktop breakpoints and adaptations
-
-## AMBIGUOUS Items
-- Anything not clearly specified in design export (flagged, not guessed)
+#### Scenario: Valid credentials
+- GIVEN user is on the login page
+- WHEN user enters valid credentials and clicks "Login"
+- THEN the system navigates to the dashboard
+- AND the user session is established
 ```
 
----
-
-## API Contract
-
-The API Contract defines the contract between frontend and backend. It specifies:
-
-- Endpoint paths, methods, request/response schemas
-- Status codes and error response formats
-- Pagination, filtering, sorting conventions
-- Data relationships and dependencies
-
-The Backend Engineer implements ONLY the contract layer. Out-of-scope items (database, auth, business logic) are stubbed with TODOs and tracked in `api-todo.md`.
-
-Mock Server Generator creates deterministic mock data from the API contract, enabling frontend development to proceed independently.
+Use RFC 2119 keywords: SHALL (mandatory), MUST (absolute), SHOULD (recommended), MAY (optional).
 
 ---
 
@@ -314,18 +371,31 @@ Mock Server Generator creates deterministic mock data from the API contract, ena
 
 | Dimension | Weight | What It Checks |
 |-----------|--------|---------------|
-| Schema Compliance | 40% | Response matches contract schema |
+| Schema Compliance | 35% | Response matches contract schema |
 | Status Code Accuracy | 20% | HTTP status codes match contract |
-| Edge Case Handling | 20% | Empty data, errors, pagination |
-| Data Integrity | 20% | CRUD operations produce correct data |
+| Error Format | 15% | Unified error format compliance |
+| Authentication | 15% | Auth/authorization as specified |
+| Backward Compatibility | 15% | No breaking changes to existing APIs |
 
-### Verdicts
+### Backend Audit Scoring
 
-| Score | Verdict | Action |
-|-------|---------|--------|
-| 95–100 (visual) / 90–100 (API) | ✅ PASS | Proceed to next phase |
-| 85–94 (visual) / 80–89 (API) | ⚠️ FIX REQUIRED | Engineer fixes, re-audit |
-| <85 (visual) / <80 (API) | ❌ REJECT | Re-implement from Contract |
+| Dimension | Weight | What It Checks |
+|-----------|--------|---------------|
+| Security | 30% | SQL injection, XSS, CSRF, auth bypass |
+| Performance | 25% | N+1 queries, missing indexes, pagination |
+| Data Integrity | 25% | Constraints, validation, cascading |
+| Error Handling | 20% | Error format, logging, recovery |
+
+### Thresholds
+
+| Auditor | Pass Threshold |
+|---------|---------------|
+| Visual Auditor | ≥ 95 |
+| API Compliance | ≥ 95 |
+| UX Compliance | ≥ 90 |
+| Integration Checker | ≥ 90 |
+| Backend Auditor | ≥ 85 |
+| Code Reviewer | ≥ 85 |
 
 ### Color Comparison: CIEDE2000
 
@@ -336,9 +406,9 @@ We use CIEDE2000 (not simple RGB distance) for perceptually accurate color compa
 
 ---
 
-## Repair Loop
+## Fix Loop
 
-When an audit score is below the threshold, the system automatically enters a repair loop:
+When an audit score is below the threshold, the system automatically enters a fix loop:
 
 ```
 Auditor (score < threshold)
@@ -356,8 +426,7 @@ If max iterations reached → HALT with failure report
 
 **Mandatory rules:**
 - Each audit phase must PASS before the next phase starts
-- Visual audit must PASS → UX compliance → Code Review
-- Integration check must PASS → Code Review
+- Stage 1 (spec compliance) must fully pass before Stage 2 (code quality)
 - Do NOT skip re-auditing after a fix — always verify
 - Do NOT ask user for permission to fix — just fix
 - All phases must pass before generating the final report
@@ -397,26 +466,36 @@ After copying, your project looks like:
 ```
 your-project/
 ├── .claude/                  ← Claude Code auto-discovers from here
-│   ├── agents/                      # 12 subagent definitions
+│   ├── agents/                      # 15 subagent definitions
 │   │   ├── system-architect.md
 │   │   ├── visual-auditor.md
+│   │   ├── api-compliance.md
+│   │   ├── backend-auditor.md
+│   │   ├── data-architect.md
 │   │   └── ...
 │   └── skills/                      # 6 pipeline skills
 │       ├── proposal/SKILL.md
-│       ├── contract/SKILL.md
-│       └── ...
+│       ├── design/SKILL.md
+│       ├── build/SKILL.md
+│       ├── verify/SKILL.md
+│       ├── fix/SKILL.md
+│       └── status/SKILL.md
 ├── archonflow/               ← All ArchonFlow files in one place
 │   ├── config/                      # Project configuration
-│   │   ├── project.config.json      # ← EDIT THIS for your project
-│   │   └── scoring-criteria.json
+│   │   └── project.config.json      # ← EDIT THIS for your project
 │   ├── templates/                   # Report & contract templates
 │   ├── scripts/                     # Playwright capture, visual diff, scoring
+│   ├── changes/                     # Change-Based tracking (auto-created)
+│   │   └── {change-name}/           # Each feature/fix as a folder
+│   ├── specs/                       # Archived completed changes
 │   ├── contracts/                   # Generated contracts (auto-created)
 │   ├── audits/                      # Audit reports (auto-created)
+│   ├── visual-reports/              # Visual audit reports (auto-created)
 │   ├── ux-reports/                  # UX compliance reports (auto-created)
 │   ├── reports/                     # Code review & final reports (auto-created)
 │   ├── mock/                        # Generated mock data (auto-created)
-│   └── memory/                      # Agent memory files (auto-created)
+│   ├── memory/                      # Agent memory files (auto-created)
+│   └── changelog.md                 # Change history tracker
 ├── src/                      ← Your existing source code (untouched)
 └── ... (your existing project files, untouched)
 ```
@@ -435,12 +514,6 @@ In Claude Code, register the marketplace and install:
 ```bash
 /plugin marketplace add evan3060/ArchonFlow
 /plugin install archonflow
-```
-
-Or install directly from the official marketplace (if published):
-
-```bash
-/plugin install archonflow@claude-plugins-official
 ```
 
 This automatically copies agents and skills into your project's `.claude/` directory.
@@ -494,17 +567,14 @@ No specific directory required.
 # Step 1: Create project proposal (interactive)
 /proposal
 
-# Step 2: Generate all contracts
-/contract analysis
+# Step 2: Generate all contracts and plan
+/design
 
-# Step 3: Build frontend (with visual audit)
-/frontend-building analysis
+# Step 3: Build with TDD
+/build
 
-# Step 4: Build backend (with API compliance)
-/backend-building analysis
-
-# Step 5: Integration audit
-/integration-audit analysis
+# Step 4: Verify with two-stage review
+/verify
 
 # Check status anytime
 /status
@@ -515,20 +585,12 @@ No specific directory required.
 When you find issues during manual testing:
 
 ```bash
-# Visual bug
-/bug-fix "首页卡片间距偏大，按钮颜色不对"
-
-# Interaction bug
-/bug-fix "提交按钮没有 hover 效果"
-
-# Frontend logic bug
-/bug-fix "点击记录卡片报错"
-
-# Backend API bug
-/bug-fix "GET /api/records 返回 500 错误"
-
-# Full-stack bug
-/bug-fix "提交表单后接口报错，前端也没有错误提示"
+# Any type of bug
+/fix "首页卡片间距偏大，按钮颜色不对"
+/fix "提交按钮没有 hover 效果"
+/fix "点击记录卡片报错"
+/fix "GET /api/records 返回 500 错误"
+/fix "提交表单后接口报错，前端也没有错误提示"
 ```
 
 ---
@@ -546,6 +608,18 @@ Design tools change. Today it's Stitch, tomorrow Figma, next year something new.
 ### Why Separate Visual Auditor and UX Compliance?
 
 Visual Auditor checks what things **look like**. UX Compliance checks what things **behave like**. A button can have the correct default color but missing hover/focus/disabled states. These are different failure modes requiring different expertise.
+
+### Why Two-Stage Review?
+
+Spec compliance (does it match the contract?) is fundamentally different from code quality (is it well-written?). A perfectly coded page that doesn't match the design is wrong. A page that matches the design but has security vulnerabilities is also wrong. Both need checking, but by different criteria.
+
+### Why TDD?
+
+TDD ensures every piece of functionality has a test that verifies it. When the fix loop runs, tests prevent regressions. When a change is incremental, existing tests catch breaking changes. The RED-GREEN-REFACTOR cycle also naturally produces better-designed code.
+
+### Why Change-Based Architecture?
+
+Each change is self-contained and traceable. You can see the full lifecycle of a feature from proposal to verification. Incremental changes don't interfere with each other. When something goes wrong, you know exactly which change caused it.
 
 ### Why Backend Only Implements the API Contract Layer?
 

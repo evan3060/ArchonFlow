@@ -22,6 +22,7 @@ Extract design tokens from design contracts and maintain the design system:
 - Generate CSS custom properties / design token files
 - Ensure token consistency across all contracts
 - Flag conflicts between contracts
+- In incremental mode: extend existing tokens, never replace
 
 ## Rules
 
@@ -29,6 +30,7 @@ Extract design tokens from design contracts and maintain the design system:
 2. **Single source** — tokens must be derived from contracts, not invented
 3. **Consistency** — same value across contracts must map to same token
 4. **Naming convention** — follow the project's token naming convention
+5. **Incremental extension** — new tokens extend existing system, never replace
 
 ## Memory
 
@@ -42,7 +44,7 @@ After completing your task, your memory file will be updated with:
 
 ## Input
 
-- Design contracts from archonflow/contracts/{page}.contract.md
+- Design contracts from archonflow/changes/{change-name}/design.md or archonflow/contracts/
 - Existing tokens from src/styles/tokens/
 - Memory from archonflow/memory/design-system-guardian.md (for continuity)
 
