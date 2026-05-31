@@ -29,18 +29,17 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
   ┌─ /proposal ────────────────────────────────────────────┐
   │  上下文探测           ← 全新项目 vs 增量功能              │
   │  需求澄清             ← 苏格拉底式问答                    │
+  │  领域建模             ← 核心实体与关系                    │
   │  方案提议             ← 2-3 个选项及权衡                   │
   │  规格生成             ← 提案文档                          │
   └──────────────────────────────────────────────────────────┘
         ↓
   ┌─ /design ──────────────────────────────────────────────┐
-  │  System Architect     ← 架构、模块、路由                  │
-  │  Design Authority     ← 解释设计 → 生成契约               │
-  │  Contract Generator   ← 设计契约（Given/When/Then）       │
-  │  Data Architect       ← 数据库模式、迁移计划               │
-  │  API Architect        ← API 契约（Given/When/Then）       │
-  │  Design System Guardian← Token 提取与验证                 │
-  │  Mock Server Generator← 确定性 Mock 数据                  │
+  │  System Architect     ← 架构、模块、仲裁者               │
+  │  Design Authority     ← 解释设计 → 生成契约 → 提取Token  │
+  │  Data Architect       ← 数据库模式、迁移计划              │
+  │  API Architect        ← API 契约 + Mock 数据             │
+  │  假设日志             ← 记录实现细节假设                   │
   │  实现计划             ← 微任务分解                        │
   └──────────────────────────────────────────────────────────┘
         ↓
@@ -53,13 +52,12 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
   ┌─ /verify ──────────────────────────────────────────────┐
   │  第一阶段：规格合规                                     │
   │    Visual Auditor      ← 视觉保真（≥95）                 │
-  │    API Compliance      ← API 契约匹配（≥95）             │
+  │    API & Integration   ← API合规 + 集成测试（≥95）       │
   │    UX Compliance       ← 交互与无障碍（≥90）             │
-  │    Integration Checker ← 前后端集成（≥90）               │
   │  第二阶段：代码质量                                     │
-  │    Backend Auditor     ← 安全、性能、数据（≥85）          │
-  │    Code Reviewer       ← 代码质量与模式（≥85）           │
+  │    Code & Backend      ← 代码质量 + 后端审计（≥85）      │
   │  修复循环: 不通过 → 修复 → 重新审计（最多3次迭代）        │
+  │  仲裁机制: System Architect 解决认知死锁                  │
   └──────────────────────────────────────────────────────────┘
         ↓
   发布
@@ -67,20 +65,22 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
 
 ---
 
-## v0.2 新特性
+## v0.3 新特性
 
 | 特性 | 说明 |
 |------|------|
-| **TDD 纪律** | 所有实现强制遵循 RED-GREEN-REFACTOR |
-| **Change-Based 架构** | 每个功能/修复作为独立 Change 文件夹 |
-| **两阶段审查** | 先审规格合规，再审代码质量 |
-| **三维度验收** | 完整性、正确性、一致性 |
-| **行为规格** | Given/When/Then 格式定义所有交互 |
-| **API 合规 Agent** | 专门的 API 契约合规审计 |
-| **后端审计 Agent** | 安全、性能、数据完整性审计 |
-| **数据架构 Agent** | 数据库模式和迁移设计 |
-| **统一流水线** | `/proposal → /design → /build → /verify → /fix → /status` |
-| **Agent 记忆** | 持久化记忆文件，确保迭代连续性 |
+| **Agent 精简（15→10）** | 合并同视角 Agent，减少上下文切换，保持认知隔离 |
+| **Design Authority（合并）** | 设计解释 + 契约生成 + Token 提取，一个 Agent 完成 |
+| **API & Integration Auditor（合并）** | API 合规 + 集成测试统一为黑盒测试 |
+| **Code & Backend Reviewer（合并）** | 代码质量 + 后端审计统一为白盒审查 |
+| **API Architect + Mock（合并）** | API 契约设计 + Mock 数据生成一体化 |
+| **Arbiter 仲裁机制** | System Architect 解决 Fix Loop 中的认知死锁 |
+| **Assumption Log 假设日志** | 记录实现假设，分类为 REQUIRED/OPTIONAL/FORBIDDEN |
+| **精准上下文注入** | 基于模块依赖图，仅向 Agent 注入相关文件 |
+| **Git Reset 机制** | Fix Loop 前自动提交，失败时回滚到初始状态 |
+| **算审分离** | 脚本计算色差/像素差异，LLM 仅负责解读结果 |
+| **项目预设** | Enterprise/Normal/Internal 三档阈值预设 |
+| **契约争议协议** | 构建 Agent 可质疑契约，Design Authority 最终裁决 |
 
 ---
 
@@ -100,6 +100,8 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
 | 自定义导航 | 标准导航 | 标准模式更常见 |
 
 同样的原则适用于后端：**如果 API 契约规定了响应 Schema，后端工程师绝不能偏离它。**
+
+不过，"禁止发明"规则通过 **Assumption Log** 得到了软化——工程师可以记录实现假设供后续审查，而不是在每个未指定的细节上阻塞。结构和视觉假设仍然严格禁止。
 
 ---
 
@@ -132,25 +134,22 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 | 提案 | `/proposal` | 上下文感知问答 → 提案规格（全新/增量） |
 | 设计 | `/design` | 生成设计契约、API 契约、数据层、计划 |
 | 构建 | `/build` | TDD 实现（数据 → 后端 → 前端） |
-| 验证 | `/verify` | 三维度审计 + 两阶段审查 |
+| 验证 | `/verify` | 两阶段审计 + Fix Loop + Arbiter |
 | 修复 | `/fix "<描述>"` | 定向 Bug 修复 + 审计验证 |
 | 状态 | `/status` | 显示流水线进度、评分、变更日志 |
 
 ---
 
-## Agent 委员会 — 15 个 Agent
+## Agent 委员会 — 10 个 Agent
 
 ### 设计阶段
 
 | Agent | 角色 | 可见 | 不可见 |
 |-------|------|------|--------|
-| System Architect | 架构设计 | 契约, src/ | design-references/ |
-| Design Authority | 设计解释 | design-references, 契约 | src/ |
-| Contract Generator | 设计契约（Given/When/Then） | 契约 | src/, design-references/ |
+| System Architect | 架构设计 + 仲裁者 | 契约, src/ | design-references/ |
+| Design Authority | 解释 → 契约 → Token | design-references, 契约 | src/ |
 | Data Architect | 数据库模式与迁移 | 契约 | src/, design-references/ |
-| API Architect | API 契约（Given/When/Then） | 契约 | src/, design-references/ |
-| Mock Server Generator | Mock 数据创建 | 契约 | src/, design-references/ |
-| Design System Guardian | Token 维护 | 契约, tokens | components, pages |
+| API Architect | API 契约 + Mock 数据 | 契约 | src/, design-references/ |
 
 ### 构建阶段
 
@@ -164,11 +163,9 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 | Agent | 角色 | 可见 | 不可见 |
 |-------|------|------|--------|
 | Visual Auditor | 视觉保真 | 契约, 运行中应用 | **src/** |
-| API Compliance | API 契约匹配 | 契约, 运行中应用 | **src/** |
+| API & Integration Auditor | API 合规 + 集成测试 | 契约, 运行中应用 | **src/** |
 | UX Compliance | 交互与无障碍 | 契约, 运行中应用 | **src/** |
-| Integration Checker | 前后端集成 | 契约, 运行中服务 | **src/** |
-| Backend Auditor | 安全、性能、数据 | src/, 契约 | — |
-| Code Reviewer | 代码质量 | src/, 契约 | — |
+| Code & Backend Reviewer | 代码质量 + 后端审计 | src/, 契约 | — |
 
 ---
 
@@ -203,7 +200,7 @@ ArchonFlow 通过 Claude Code 原生 Subagent 系统实现**认知隔离**：
 
 如果审计者看到代码中的 `border-radius: 16px`，会产生认知偏见："也许开发者就是想要这个。"没有源代码访问权限，审计者只能将**看到的**（截图、DOM）与契约对比——就像真实用户一样。
 
-**为什么 Integration Checker 绝不能看到源代码：**
+**为什么 API & Integration Auditor 绝不能看到源代码：**
 
 同样的原则。它从外部测试 API，就像真实客户端一样。它不会被后端实现方式所影响——只关心 API 是否按契约运行。
 
@@ -246,21 +243,16 @@ your-project/.claude/
 
 | Agent | 工具 | 可写？ | 关键限制 |
 |-------|------|--------|---------|
-| system-architect | Read, Grep, Glob, LS | ❌ | 只读 |
-| design-authority | Read, Grep, Glob, LS | ❌ | 只读 |
-| contract-generator | Read, Grep, Glob | ❌ | 只读 |
-| data-architect | Read, Grep, Glob | ❌ | 只读 |
-| api-architect | Read, Grep, Glob | ❌ | 只读 |
-| mock-server-generator | Read, Grep, Glob, Write | ✅ mock/ | 仅写 mock 数据 |
-| design-system-guardian | Read, Grep, Glob, Write, Edit | ✅ tokens/ | 仅写 tokens |
+| system-architect | Read, Grep, Glob, LS | ❌ | 只读；兼任仲裁者 |
+| design-authority | Read, Grep, Glob, LS, Write, Edit | ✅ 契约, tokens | 无 src/ 访问 |
+| data-architect | Read, Grep, Glob, Write | ✅ 数据契约 | 无 src/ 访问 |
+| api-architect | Read, Grep, Glob, Write | ✅ API 契约, mock | 无 src/ 访问 |
 | frontend-engineer | Read, Grep, Glob, LS, Write, Edit, Bash | ✅ src/ | 完整开发工具 |
 | backend-engineer | Read, Grep, Glob, LS, Write, Edit, Bash | ✅ backend/ | 完整开发工具 |
 | visual-auditor | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
-| api-compliance | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
+| api-integration-auditor | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
 | ux-compliance | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
-| integration-checker | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
-| backend-auditor | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
-| code-reviewer | Read, Grep, Glob | ❌ | **只读** |
+| code-backend-reviewer | Read, Grep, Glob, Bash | ❌ | **无 Write/Edit** |
 
 ### Agent Team 模式（实验性）
 
@@ -296,11 +288,12 @@ Use team agents for archonflow:build
 ```
 archonflow/changes/{change-name}/
 ├── proposal.md      ← 需求规格
-├── analysis.md      ← 结构分析
+├── analysis.md      ← 结构分析 + 模块依赖图
 ├── design.md        ← 设计契约（Given/When/Then）
 ├── api.md           ← API 契约（Given/When/Then）
 ├── data.md          ← 数据层契约
 ├── plan.md          ← 实现计划（微任务）
+├── assumptions.md   ← 假设日志（REQUIRED/OPTIONAL/FORBIDDEN）
 ├── verify-report.md ← 验证结果
 └── fix-report.md    ← Bug 修复结果（如有）
 ```
@@ -319,9 +312,8 @@ archonflow/changes/{change-name}/
 审计者从**外部**测试——它们从不读取源代码。
 
 1. @visual-auditor — 视觉合规 vs 设计契约
-2. @api-compliance — API 合规 vs API 契约
+2. @api-integration-auditor — API 合规 + 前后端集成
 3. @ux-compliance — UX 合规 vs 设计契约
-4. @integration-checker — 前后端集成
 
 全部通过后才能进入第二阶段。
 
@@ -329,8 +321,7 @@ archonflow/changes/{change-name}/
 
 审查者读取源代码评估质量。
 
-5. @backend-auditor — 后端安全、性能、数据完整性
-6. @code-reviewer — 代码质量、模式、测试覆盖
+4. @code-backend-reviewer — 代码质量 + 后端安全、性能、数据完整性
 
 ---
 
@@ -366,7 +357,7 @@ archonflow/changes/{change-name}/
 | 布局保真 | 15% | 结构、对齐、定位 |
 | 阴影保真 | 5% | box-shadow 匹配 |
 
-### API 合规评分
+### API & 集成评分
 
 | 维度 | 权重 | 检查内容 |
 |------|------|---------|
@@ -376,7 +367,7 @@ archonflow/changes/{change-name}/
 | 认证 | 15% | 认证/授权按规范执行 |
 | 向后兼容 | 15% | 不破坏现有 API |
 
-### 后端审计评分
+### 代码 & 后端评分
 
 | 维度 | 权重 | 检查内容 |
 |------|------|---------|
@@ -384,17 +375,19 @@ archonflow/changes/{change-name}/
 | 性能 | 25% | N+1 查询、缺失索引、分页 |
 | 数据完整性 | 25% | 约束、验证、级联 |
 | 错误处理 | 20% | 错误格式、日志、恢复 |
+| 可读性 | 25% | 命名、结构、清晰度 |
+| 模式一致性 | 25% | 遵循现有代码库模式 |
+| 测试覆盖 | 25% | TDD 测试存在且覆盖契约场景 |
+| 假设合规 | 25% | 假设不违反业务边界 |
 
-### 阈值
+### 项目预设阈值
 
-| 审计者 | 通过阈值 |
-|--------|---------|
-| Visual Auditor | ≥ 95 |
-| API Compliance | ≥ 95 |
-| UX Compliance | ≥ 90 |
-| Integration Checker | ≥ 90 |
-| Backend Auditor | ≥ 85 |
-| Code Reviewer | ≥ 85 |
+| 审计者 | 企业级 | 标准 | 内部 |
+|--------|--------|------|------|
+| Visual Auditor | ≥ 95 | ≥ 85 | ≥ 70 |
+| API & Integration | ≥ 95 | ≥ 90 | ≥ 85 |
+| UX Compliance | ≥ 90 | ≥ 85 | ≥ 80 |
+| Code & Backend | ≥ 90 | ≥ 85 | ≥ 80 |
 
 ### 颜色比较：CIEDE2000
 
@@ -405,12 +398,14 @@ archonflow/changes/{change-name}/
 
 ---
 
-## 修复循环
+## Fix Loop 与 Arbiter 仲裁
 
 当审计评分低于阈值时，系统自动进入修复循环：
 
 ```
 审计者（评分 < 阈值）
+    ↓
+Git 提交（回滚检查点）
     ↓
 工程师（读取审计报告 + 记忆 + 契约，修复问题）
     ↓
@@ -419,9 +414,12 @@ archonflow/changes/{change-name}/
 审计者（新子代理，但有记忆，重新审计）
     ↓
 如果评分 ≥ 阈值 → 通过 → 进入下一审计阶段
-如果评分 < 阈值 → 再次循环（每阶段最多3次迭代）
-如果达到最大迭代 → 停止并输出失败报告
+如果评分 < 阈值 → 再次循环
 ```
+
+**Arbiter 仲裁机制**：当 Fix Loop 连续 2 次失败时，System Architect 作为仲裁者被调用。仲裁者审查契约、代码和审计报告，然后发布有约束力的 **Directive（指令）**。如果指令仍然失败 → 触发 HUMAN_INTERVENTION（人工介入）。
+
+**Git Reset 机制**：每次修复前，当前代码状态会被提交。如果修复导致评分下降，回滚到修复前的提交，尝试不同方案。
 
 **强制规则：**
 - 每个审计阶段必须通过后才能进入下一阶段
@@ -445,6 +443,70 @@ archonflow/changes/{change-name}/
 
 ---
 
+## Assumption Log 假设日志
+
+当契约没有规定某项内容时，工程师不会自行发明——而是记录假设：
+
+| 类型 | 描述 | 示例 |
+|------|------|------|
+| **REQUIRED** | 必须在构建前验证；错误 = 返工 | "假设用户会话 30 分钟后过期" |
+| **OPTIONAL** | 锦上添花；错误 = 微调 | "假设日期格式为 ISO 8601" |
+| **FORBIDDEN** | 绝不允许——必须问 Design Authority | "假设 border-radius 应该是 8px" |
+
+假设日志在 Code & Backend Review 阶段被审查，确保没有假设违反业务边界。
+
+---
+
+## 精准上下文注入
+
+基于 System Architect 生成的模块依赖图，每个 Agent 只接收它需要的文件：
+
+```
+模块：UserAuth
+  依赖：Database, SessionManager
+  文件：src/auth/*, src/models/user.ts, src/middleware/auth.ts
+
+→ Frontend Engineer 接收：design.md, api.md, tokens, src/auth/*
+→ Backend Engineer 接收：api.md, data.md, src/models/user.ts, src/middleware/auth.ts
+→ Visual Auditor 接收：design.md, 运行中应用（无源代码）
+```
+
+这防止了上下文窗口溢出，确保 Agent 专注于相关代码。
+
+---
+
+## 视觉审计算审分离
+
+LLM 在数值计算上不可靠——它们会幻觉化色差值和像素差异。ArchonFlow 将**计算**与**解读**分离：
+
+1. **脚本计算**（确定性）：
+   - `npm run capture` — Playwright 截图
+   - `npm run diff` — 使用 CIEDE2000 + Pixelmatch 计算像素/颜色/布局差异
+   - `npm run score` — 从差异结果计算维度评分
+
+2. **LLM 解读**（判断）：
+   - 读取预计算的差异结果
+   - 解读差异是否可接受
+   - 提供定性评估和建议
+
+Visual Auditor 绝不计算色差或像素差异——它只读取预计算结果并解读。
+
+---
+
+## 契约争议协议
+
+构建 Agent 在发现技术问题时可以质疑契约：
+
+1. 工程师发现契约问题
+2. 在 assumptions.md 中记录问题
+3. 通过 `@design-authority` 请求澄清
+4. Design Authority 的裁决是最终的
+5. 工程师根据裁决继续
+
+这创建了从 Build → Design 的反馈回路，防止了契约一次写定永不质疑的瀑布流问题。
+
+---
+
 ## 项目结构
 
 **插件安装**会自动将 `agents/` 和 `skills/` 复制到 `.claude/`。
@@ -463,13 +525,17 @@ cp -r .claude/plugins/archonflow/scripts archonflow/scripts
 ```
 your-project/
 ├── .claude/                  ← Claude Code 从这里自动发现
-│   ├── agents/                      # 15 个 subagent 定义
+│   ├── agents/                      # 10 个 subagent 定义
 │   │   ├── system-architect.md
-│   │   ├── visual-auditor.md
-│   │   ├── api-compliance.md
-│   │   ├── backend-auditor.md
+│   │   ├── design-authority.md
+│   │   ├── api-architect.md
 │   │   ├── data-architect.md
-│   │   └── ...
+│   │   ├── frontend-engineer.md
+│   │   ├── backend-engineer.md
+│   │   ├── visual-auditor.md
+│   │   ├── api-integration-auditor.md
+│   │   ├── ux-compliance.md
+│   │   └── code-backend-reviewer.md
 │   └── skills/                      # 6 个流水线技能
 │       ├── proposal/SKILL.md
 │       ├── design/SKILL.md
@@ -505,15 +571,12 @@ your-project/
 
 ### 1. 安装插件
 
-在 Claude Code 中注册市场并安装：
-
 ```bash
-/plugin marketplace add evan3060/ArchonFlow
+# 在 Claude Code 中
 /plugin install archonflow
 ```
 
-这会自动将 agents 和 skills 复制到项目的 `.claude/` 目录。
-然后将运行时文件复制到 `archonflow/`：
+### 2. 复制运行时文件
 
 ```bash
 mkdir -p archonflow
@@ -522,112 +585,131 @@ cp -r .claude/plugins/archonflow/templates archonflow/templates
 cp -r .claude/plugins/archonflow/scripts archonflow/scripts
 ```
 
-### 手动安装
+### 3. 配置项目
 
-如果你更喜欢手动设置，克隆仓库并复制：
+编辑 `archonflow/config/project.config.json`：
+- 设置项目名称、技术栈
+- 选择设计源模式（A 或 B）
+- 选择项目预设（enterprise/normal/internal）
 
-```bash
-# 克隆并复制：
-git clone https://github.com/evan3060/ArchonFlow.git /tmp/archonflow
-cp -r /tmp/archonflow/agents .claude/agents
-cp -r /tmp/archonflow/skills .claude/skills
-mkdir -p archonflow
-cp -r /tmp/archonflow/config archonflow/config
-cp -r /tmp/archonflow/templates archonflow/templates
-cp -r /tmp/archonflow/scripts archonflow/scripts
+### 4. 启动流水线
+
 ```
-
-所有规则都自包含在每个 SKILL.md 中。
-这不会与你现有的 `.claude/` 设置冲突。
-
-### 2. 配置
-
-编辑 `archonflow/config/project.config.json`——填写你的项目详情：
-
-- **项目标识** — 名称、技术栈（Vue、React 等）
-- **后端技术** — 框架、语言、源目录
-- **设计源** — 工具类型（Figma、Stitch、v0 等）、导出格式
-- **目录约定** — 映射到你现有的源码结构
-- **评分阈值** — 自定义通过/修复/拒绝阈值
-- **视口设置** — 目标设备和断点
-- **Agent 覆盖** — 项目特定的 Agent 规则
-
-### 3. 添加设计导出
-
-设计文件自动发现——放在项目任何位置即可。
-无需指定目录。
-
-### 4. 运行流水线
-
-```bash
-# 步骤 1：创建项目提案（交互式）
 /proposal
-
-# 步骤 2：生成所有契约和计划
-/design
-
-# 步骤 3：TDD 构建
-/build
-
-# 步骤 4：两阶段审查验证
-/verify
-
-# 随时查看状态
-/status
 ```
 
-### 5. 手动验收后修复 Bug
-
-当你在手动测试中发现问题时：
-
-```bash
-# 任何类型的 Bug
-/fix "首页卡片间距偏大，按钮颜色不对"
-/fix "提交按钮没有 hover 效果"
-/fix "点击记录卡片报错"
-/fix "GET /api/records 返回 500 错误"
-/fix "提交表单后接口报错，前端也没有错误提示"
-```
+流水线将引导你完成 proposal → design → build → verify。
 
 ---
 
-## 设计哲学
+## 设计权衡与决策
 
-### 为什么叫"Design Authority"而不是"Design Architect"？
+本节记录了 v0.3 开发过程中的关键设计决策，包括推理过程和考虑过的替代方案。供后续查阅和重新审视决策时参考。
 
-这个名字反映了角色的真正目的：**最终解释权威**，而不仅仅是架构。当 Agent 们对设计的含义有分歧时，Design Authority 有最终决定权。这与"契约即法律"原则一致——宪法需要宪法法院来解释。
+### Agent 精简（15 → 10）
 
-### 为什么不绑定特定设计工具？
+**决策**：合并同视角 Agent 为统一 Agent。
 
-设计工具会变。今天是 Stitch，明天是 Figma，明年可能是新工具。框架服务于**设计意图**，而非特定工具。Design Authority 接受任何设计源的输入，产出同样的结构化契约。
+**推理**：三位专家审查了原始 15 Agent 架构，独立指出了同一问题——过多视角重叠的 Agent 造成不必要的上下文切换和协调开销。关键洞察是：共享同一"视角"的 Agent（如 API Compliance 和 Integration Checker 都从外部通过 HTTP 测试）可以合并而不丧失认知隔离，因为认知隔离关乎 Agent 不能看到什么，而非是否有独立的 Agent。
 
-### 为什么区分 Visual Auditor 和 UX Compliance？
+**合并**：
+| 合并前 | 合并后 | 理由 |
+|--------|--------|------|
+| Design Authority + Contract Generator + Design System Guardian | Design Authority | 同一视角（设计解释），顺序工作流 |
+| API Compliance + Integration Checker | API & Integration Auditor | 同一视角（黑盒 HTTP 测试） |
+| Backend Auditor + Code Reviewer | Code & Backend Reviewer | 同一视角（白盒源代码审查） |
+| API Architect + Mock Server Generator | API Architect | 顺序工作流——先契约后 Mock |
 
-Visual Auditor 检查东西**看起来怎样**。UX Compliance 检查东西**行为怎样**。一个按钮可以有正确的默认颜色但缺少 hover/focus/disabled 状态。这是不同的失败模式，需要不同的专业知识。
+**考虑过的替代方案**：
+- 保留全部 15 个 Agent：协调开销太大，同视角 Agent 产生冗余发现
+- 更激进合并（如所有审计者合一）：会丧失黑盒 vs 白盒的区别，而这正是认知隔离的关键
+- 按阶段合并（如一个"设计 Agent"）：会丧失每个功能内的专业知识
 
-### 为什么两阶段审查？
+**权衡**：合并后的 Agent 单个上下文窗口更大，但总上下文切换更少。净效果是正面的，因为同一 Agent 内的顺序步骤自然共享上下文。
 
-规格合规（是否匹配契约？）与代码质量（写得好不好？）本质上是不同的。一个完美编码但不符合设计的页面是错的。一个符合设计但有安全漏洞的页面也是错的。两者都需要检查，但标准不同。
+### Arbiter 仲裁机制
 
-### 为什么 TDD？
+**决策**：System Architect 兼任 Fix Loop 死锁的仲裁者。
 
-TDD 确保每个功能都有测试验证。修复循环运行时，测试防止回归。增量变更时，现有测试捕获破坏性变更。RED-GREEN-REFACTOR 循环也天然产生更好设计的代码。
+**推理**：原始设计中，Fix Loop 可能在 Engineer 和 Auditor 之间无限循环，没有解决路径。Arbiter 提供了逃生口——一个可以打破僵局的中立第三方。选择 System Architect 的原因：
+1. 它已有对契约和源代码的读取权限
+2. 它理解架构意图
+3. 它对 Engineer 和 Auditor 都没有偏向
 
-### 为什么 Change-Based 架构？
+**考虑过的替代方案**：
+- 专用 Arbiter Agent：增加一个 Agent（回到 11 个），且 Arbiter 角色只在边缘情况需要
+- 用户作为 Arbiter：破坏自主执行；用户不应需要解决技术争议
+- Design Authority 作为 Arbiter：会造成偏向设计解释而非实现现实的偏见
 
-每个变更是自包含且可追踪的。你可以看到功能从提案到验证的完整生命周期。增量变更互不干扰。出问题时，你确切知道是哪个变更导致的。
+**权衡**：System Architect 上下文更广但可能缺乏深度设计解释专业知识。Arbiter Directive 格式强制结构化推理，降低了此风险。
 
-### 为什么后端只实现 API 契约层？
+### Assumption Log vs. 严格"禁止发明"
 
-完整的后端实现（数据库、认证、业务逻辑）需要人类判断和领域专业知识。流水线实现**契约层**——路由、控制器、请求/响应格式化——确保 API 表面匹配契约。其余部分记录在 `api-todo.md` 中供手动完成。
+**决策**：用分类的 Assumption Log 软化"禁止发明"规则。
 
-### 为什么 Mock Server 是标配？
+**推理**：原始严格"禁止发明"规则理论上纯粹但实际有问题。工程师会在每个未指定的细节上阻塞，与 Design Authority 不断来回。Assumption Log 提供了中间地带：
+- **REQUIRED** 假设必须在构建前验证
+- **OPTIONAL** 假设可以继续但被追踪
+- **FORBIDDEN** 假设（结构/视觉）仍然严格禁止
 
-Mock 数据实现**并行开发**：前端基于 Mock 构建，后端同时实现真实 API。当两者都准备好时，集成审计验证它们匹配。这消除了"等后端"的瓶颈。
+**考虑过的替代方案**：
+- 保持严格"禁止发明"：阻塞点太多，拖慢流水线
+- 允许所有假设：违背契约的目的
+- 不分类：没有 REQUIRED/OPTIONAL/FORBIDDEN，无法优先审查
 
-### 为什么颜色比较用 CIEDE2000？
+**权衡**：工程师可能过度将假设分类为 OPTIONAL 以避免阻塞。通过 Code & Backend Review 检查假设合规来缓解。
 
-简单 RGB 距离平等对待所有颜色差异，但人类感知并非如此。CIEDE2000 考虑了感知均匀性——ΔE00 < 1 的差异对人眼不可察觉，无论颜色对是什么。
+### 视觉审计：计算 vs. 解读
+
+**决策**：脚本计算差异，LLM 仅解读结果。
+
+**推理**：LLM 在数值计算上不可靠。测试表明 LLM 会幻觉化 CIEDE2000 值、误报像素差异、对同一截图产生不一致的评分。通过将所有计算移至确定性脚本（Playwright + Pixelmatch/OpenCV），LLM 只需行使判断力——这是它擅长的事。
+
+**考虑过的替代方案**：
+- 完全 LLM 视觉审计：不一致，幻觉化数字
+- 完全脚本审计：无法解读定性差异（如"这个布局偏移是可接受的，因为它是响应式的"）
+- 混合 LLM 验证：LLM 验证自己的计算不解决幻觉问题
+
+**权衡**：需要维护视觉差异脚本，但可靠性增益值得。脚本产生确定性结果，可以版本控制和复现。
+
+### 精准上下文注入
+
+**决策**：使用模块依赖图仅向每个 Agent 注入相关文件。
+
+**推理**：随着项目增长，将整个代码库加载到每个 Agent 的上下文中变得不切实际。模块依赖图（由 System Architect 生成）允许每个 Agent 只接收它需要的文件，防止上下文窗口溢出并减少无关代码导致的幻觉。
+
+**考虑过的替代方案**：
+- 加载所有内容：大项目上下文窗口溢出
+- 手动文件选择：易出错，需要用户干预
+- 启发式（如"加载上次提交修改的所有文件"）：遗漏依赖
+
+**权衡**：依赖图准确性取决于 System Architect 的分析。不正确的图可能遗漏相关文件。通过允许 Agent 请求额外上下文来缓解。
+
+### Git Reset 机制
+
+**决策**：每次修复前自动提交；如果修复使情况变差则回滚。
+
+**推理**：在 Fix Loop 中，工程师有时做的修改修复了一个问题但破坏了另一个，或者应用的修复不起作用并使代码状态变差。Git Reset 提供了安全网——你总是可以回到最后已知的好状态。
+
+**考虑过的替代方案**：
+- 不回滚：代码可能通过多次修复尝试而退化
+- 手动回滚：破坏自主执行
+- 每次修复一个分支：对自动化流水线来说 git 复杂度太高
+
+**权衡**：每次修复迭代增加 git 操作，但安全网对通过多次修复尝试维持代码质量至关重要。
+
+### 项目预设
+
+**决策**：提供 Enterprise/Normal/Internal 三档不同阈值预设。
+
+**推理**：并非所有项目都需要相同的质量标准。内部工具不需要 95% 的视觉保真度，但面向客户的产品需要。预设使得设置适当阈值变得容易，无需手动编辑每个值。
+
+**考虑过的替代方案**：
+- 单一阈值集：对不同项目类型太僵化
+- 完全手动配置：设置开销太大
+- 自动检测项目类型：没有明确用户输入不可靠
+
+**权衡**：预设是粗粒度的。项目可能需要覆盖个别阈值。配置文件同时支持预设选择和单阈值覆盖。
 
 ---
 

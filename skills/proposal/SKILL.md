@@ -1,16 +1,16 @@
 ---
 name: proposal
-description: "Collect requirements and create a proposal spec. First step in the ArchonFlow pipeline — context-aware for both greenfield and incremental projects. Uses Change-Based tracking."
+description: "Collect requirements and create a proposal spec with domain modeling. First step in the ArchonFlow pipeline — context-aware for both greenfield and incremental projects. Uses Change-Based tracking."
 ---
 
 # Proposal Skill
 
-Collect project requirements and create a proposal spec. Automatically detects greenfield vs incremental context.
+Collect project requirements, perform domain modeling, and create a proposal spec. Automatically detects greenfield vs incremental context.
 
 ## ArchonFlow Core Rules
 
-1. **Design Contract is the single source of truth** — derived from design export, obeyed by all agents
-2. **No Invention Rule** — if Contract does not specify something, stop and ask Design Authority
+1. **Contract First Development** — design contract is the single source of truth, derived from design export, obeyed by all agents
+2. **Assumption Log** — if contract doesn't specify something, record assumptions in assumptions.md; structural/visual assumptions are forbidden
 3. **Design Authority has final interpretation** — disputes resolved by Authority
 4. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
 
@@ -44,7 +44,7 @@ At the start, detect the project context:
 3. Check `archonflow/changes/` for active changes (incremental)
 4. Check `archonflow/memory/` for agent memories (incremental)
 5. Check `design-references/` for design files (auto-discovery)
-6. Read `archonflow/config/project.config.json` for project setup
+6. Read `archonflow/config/project.config.json` for project setup and profile
 
 ### Phase 2: Requirements Clarification
 
@@ -68,14 +68,25 @@ Ask one question at a time, prefer multiple choice:
 2. Impact scope — which existing pages/APIs are affected?
 3. Relationship to existing features — dependencies or conflicts?
 
-### Phase 3: Approach Proposal
+### Phase 3: Domain Modeling
+
+Before proposing approaches, identify the core domain concepts:
+
+1. List the key domain entities (e.g., User, Order, Product)
+2. Define relationships between entities (1:1, 1:N, N:M)
+3. Identify the core business rules and invariants
+4. Map domain concepts to pages/APIs
+
+This step ensures the proposal is grounded in business reality, not just UI features.
+
+### Phase 4: Approach Proposal
 
 1. Propose 2-3 approaches with trade-offs
 2. Each approach includes: description, pros, cons, applicable scenarios
 3. Give recommended approach with reasoning
 4. User selects approach
 
-### Phase 4: Spec Generation
+### Phase 5: Spec Generation
 
 Generate the proposal spec document.
 
@@ -89,6 +100,21 @@ Generate the proposal spec document.
 
 ## Target Users
 {user personas}
+
+## Domain Model
+### Core Entities
+| Entity | Description | Key Attributes |
+|--------|-------------|----------------|
+| {name} | {description} | {attributes} |
+
+### Entity Relationships
+| From | To | Type | Description |
+|------|-----|------|-------------|
+| {entity} | {entity} | 1:N | {description} |
+
+### Business Rules
+1. {rule}
+2. {rule}
 
 ## Feature List
 1. {feature} — {description} (Priority: P0/P1/P2)
@@ -127,6 +153,15 @@ Generate the proposal spec document.
 ## Feature Description
 {what is being added/changed}
 
+## Domain Impact
+### New/Modified Entities
+| Entity | Change Type | Description |
+|--------|------------|-------------|
+| {name} | NEW/MODIFY | {description} |
+
+### New/Modified Business Rules
+1. {rule}
+
 ## Incremental Impact Analysis
 ### New Pages/Components
 | Page/Component | Description |
@@ -158,7 +193,7 @@ Generate the proposal spec document.
 
 Present spec in sections, get user confirmation after each section.
 
-### Phase 5: Spec Self-Review
+### Phase 6: Spec Self-Review
 
 After generating the spec, perform self-review:
 
@@ -166,14 +201,15 @@ After generating the spec, perform self-review:
 2. **Internal consistency** — do any sections contradict each other?
 3. **Scope check** — is this focused enough for a single change, or needs decomposition?
 4. **Ambiguity check** — could any requirement be interpreted two ways? Make it explicit
-5. **Incremental checks** (if applicable):
+5. **Domain model completeness** — are all core entities and relationships captured?
+6. **Incremental checks** (if applicable):
    - Conflict with existing specs in `archonflow/specs/`
    - Breaking change assessment
    - Regression risk validation
 
 Fix any issues inline. No need to re-review.
 
-### Phase 6: User Approval Gate
+### Phase 7: User Approval Gate
 
 Present the complete spec to the user:
 
@@ -181,7 +217,7 @@ Present the complete spec to the user:
 
 Wait for user response. If changes requested, update spec and re-run self-review. Only proceed once user approves.
 
-### Phase 7: Save and Track
+### Phase 8: Save and Track
 
 1. Create change directory: `archonflow/changes/{change-name}/`
 2. Save spec to: `archonflow/changes/{change-name}/proposal.md`
@@ -199,7 +235,7 @@ Wait for user response. If changes requested, update spec and re-run self-review
 
 ## Output
 
-- `archonflow/changes/{change-name}/proposal.md` — proposal spec
+- `archonflow/changes/{change-name}/proposal.md` — proposal spec with domain model
 - `archonflow/changelog.md` — updated changelog
 
 ## Next Step

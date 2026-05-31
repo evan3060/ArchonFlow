@@ -4,7 +4,7 @@
   "project": {
     "name": "",
     "description": "",
-    "version": "0.1.0",
+    "version": "0.3.0",
 
     "techStack": {
       "framework": "",
@@ -80,17 +80,15 @@
     "maxFixIterations": 3,
 
     "gates": [
-      { "agent": "visualAuditor", "minScore": 95, "blocks": "codeReviewer" },
-      { "agent": "apiCompliance", "minScore": 95, "blocks": "codeReviewer" },
-      { "agent": "uxCompliance", "minScore": 90, "blocks": "codeReviewer" },
-      { "agent": "integrationChecker", "minScore": 90, "blocks": "codeReviewer" },
-      { "agent": "backendAuditor", "minScore": 85, "blocks": "deployment" },
-      { "agent": "codeReviewer", "minScore": 85, "blocks": "deployment" }
+      { "agent": "visualAuditor", "minScore": 95, "blocks": "codeBackendReviewer" },
+      { "agent": "apiIntegrationAuditor", "minScore": 95, "blocks": "codeBackendReviewer" },
+      { "agent": "uxCompliance", "minScore": 90, "blocks": "codeBackendReviewer" },
+      { "agent": "codeBackendReviewer", "minScore": 85, "blocks": "deployment" }
     ],
 
     "twoStageReview": true,
-    "stage1": ["visualAuditor", "apiCompliance", "uxCompliance", "integrationChecker"],
-    "stage2": ["backendAuditor", "codeReviewer"]
+    "stage1": ["visualAuditor", "apiIntegrationAuditor", "uxCompliance"],
+    "stage2": ["codeBackendReviewer"]
   },
 
   "directories": {
@@ -117,11 +115,9 @@
   "scoring": {
     "thresholds": {
       "visual": 95,
-      "apiCompliance": 95,
+      "apiIntegration": 95,
       "uxCompliance": 90,
-      "integration": 90,
-      "backendAudit": 85,
-      "codeReview": 85
+      "codeBackend": 85
     },
 
     "dimensions": {
@@ -133,19 +129,27 @@
       "shadow": { "weight": 0.05, "enabled": true }
     },
 
-    "apiComplianceDimensions": {
+    "apiIntegrationDimensions": {
       "schemaCompliance": { "weight": 0.35 },
       "statusCodeAccuracy": { "weight": 0.20 },
       "errorFormat": { "weight": 0.15 },
       "authentication": { "weight": 0.15 },
-      "backwardCompatibility": { "weight": 0.15 }
+      "backwardCompatibility": { "weight": 0.15 },
+      "dataFlow": { "weight": 0.30 },
+      "errorPropagation": { "weight": 0.25 },
+      "stateConsistency": { "weight": 0.25 },
+      "edgeCaseCoverage": { "weight": 0.20 }
     },
 
-    "backendAuditDimensions": {
+    "codeBackendDimensions": {
       "security": { "weight": 0.30 },
       "performance": { "weight": 0.25 },
       "dataIntegrity": { "weight": 0.25 },
-      "errorHandling": { "weight": 0.20 }
+      "errorHandling": { "weight": 0.20 },
+      "readability": { "weight": 0.25 },
+      "patternConsistency": { "weight": 0.25 },
+      "testCoverage": { "weight": 0.25 },
+      "assumptionCompliance": { "weight": 0.25 }
     },
 
     "colorComparison": {
@@ -184,53 +188,54 @@
       "[data-dynamic]",
       ".loading-skeleton",
       ".timestamp"
-    ]
+    ],
+    "visualAuditSeparation": {
+      "enabled": true,
+      "calculationScript": "scripts/visual-diff.ts",
+      "interpretationOnly": true
+    }
   },
 
   "agents": {
     "systemArchitect": {
       "enabled": true,
-      "additionalRules": []
+      "additionalRules": [],
+      "arbiterEnabled": true
     },
     "designAuthority": {
       "enabled": true,
-      "additionalRules": []
-    },
-    "contractGenerator": {
-      "enabled": true,
-      "additionalRules": []
+      "additionalRules": [],
+      "steps": ["interpretation", "contract", "tokens"]
     },
     "apiArchitect": {
       "enabled": true,
-      "additionalRules": []
+      "additionalRules": [],
+      "mockGeneration": true
     },
     "dataArchitect": {
       "enabled": true,
-      "additionalRules": []
-    },
-    "mockServerGenerator": {
-      "enabled": true,
-      "additionalRules": []
-    },
-    "designSystemGuardian": {
-      "enabled": true,
-      "tokenOutputFormats": ["json", "tailwind", "scss", "css"],
       "additionalRules": []
     },
     "frontendEngineer": {
       "enabled": true,
       "additionalRules": [],
       "forbiddenPatterns": [],
-      "tddRequired": true
+      "tddRequired": true,
+      "tddScope": {
+        "logic": "mandatory",
+        "ui": "recommended"
+      }
     },
     "backendEngineer": {
       "enabled": true,
       "additionalRules": [],
-      "scope": "api-contract-layer-only",
+      "scope": "business-skeleton",
       "tddRequired": true
     },
     "visualAuditor": {
       "enabled": true,
+      "calculationScript": "scripts/visual-diff.ts",
+      "interpretationOnly": true,
       "playwrightConfig": {
         "browser": "chromium",
         "headless": true,
@@ -244,24 +249,36 @@
       "minTouchTarget": 44,
       "additionalRules": []
     },
-    "apiCompliance": {
+    "apiIntegrationAuditor": {
       "enabled": true,
       "additionalRules": []
     },
-    "integrationChecker": {
+    "codeBackendReviewer": {
       "enabled": true,
-      "backendUrl": "http://localhost:3000",
-      "additionalRules": []
-    },
-    "backendAuditor": {
-      "enabled": true,
-      "additionalRules": []
-    },
-    "codeReviewer": {
-      "enabled": true,
+      "additionalRules": [],
       "maxComponentLines": 200,
-      "typeCoverageThreshold": 90,
-      "additionalRules": []
+      "typeCoverageThreshold": 90
+    }
+  },
+
+  "projectProfiles": {
+    "enterprise": {
+      "visualThreshold": 95,
+      "apiThreshold": 95,
+      "uxThreshold": 90,
+      "codeThreshold": 90
+    },
+    "normal": {
+      "visualThreshold": 85,
+      "apiThreshold": 90,
+      "uxThreshold": 85,
+      "codeThreshold": 85
+    },
+    "internal": {
+      "visualThreshold": 70,
+      "apiThreshold": 85,
+      "uxThreshold": 80,
+      "codeThreshold": 80
     }
   }
 }

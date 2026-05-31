@@ -1,92 +1,46 @@
 ---
 name: verify
-description: "Three-dimension verification: Completeness, Correctness, Coherence. Two-stage review: spec compliance first, then code quality. Fix loop until all audits pass."
+description: "Two-stage audit: spec compliance then code quality. Fourth step in the ArchonFlow pipeline. Invokes Visual Auditor, API & Integration Auditor, UX Compliance, and Code & Backend Reviewer with Fix Loop and Arbiter mechanism."
 ---
 
 # Verify Skill
 
-Three-dimension verification of the implementation against contracts. Two-stage review process with mandatory fix loop.
+Two-stage audit pipeline: spec compliance first, then code quality. Includes Fix Loop with Arbiter mechanism for deadlock resolution.
 
 ## ArchonFlow Core Rules
 
-1. **Design Contract is the single source of truth** — derived from design export, obeyed by all agents
-2. **Visual Score ≥ 95 required** — no page ships below this threshold
-3. **API Compliance ≥ 95 required** — no API ships below this threshold
-4. **UX Compliance ≥ 90 required** — no page ships below this threshold
-5. **Code Quality ≥ 85 required** — no code ships below this threshold
-6. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
+1. **Contract First Development** — design contract is the single source of truth, derived from design export, obeyed by all agents
+2. **Assumption Log** — if contract doesn't specify something, record assumptions in assumptions.md; structural/visual assumptions are forbidden
+3. **Design Authority has final interpretation** — disputes resolved by Authority
+4. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
+5. **Visual Audit Separation** — scripts compute differences, LLM interprets results
 
 ## Autonomous Execution
 
-This skill runs autonomously from start to finish. Do NOT:
-- Ask "Should I run the audit?" — RUN IT
-- Ask "Should I fix the issues?" — FIX THEM
-- Ask "Should I re-audit?" — RE-AUDIT
-- Pause for user confirmation between audit stages
+This skill runs autonomously. Do NOT:
+- Ask "Should I invoke the next auditor?" — INVOKE AUTOMATICALLY
+- Ask "Should I fix this?" — FIX AUTOMATICALLY
+- Ask "Should I re-audit?" — RE-AUDIT AUTOMATICALLY
 
 Only stop for:
-- **ALL AUDITS PASS** — present final report
-- **MAX ITERATIONS (3) REACHED** — present partial report with remaining issues
-- **BLOCKED**: dev server not running, cannot access application
-
-## Three Verification Dimensions
-
-| Dimension | What | Auditors | Threshold |
-|-----------|------|----------|-----------|
-| **Completeness** | All contract requirements implemented | @visual-auditor, @api-compliance | Visual ≥ 95, API ≥ 95 |
-| **Correctness** | Behavior matches Given/When/Then specs | @ux-compliance, @integration-checker | UX ≥ 90 |
-| **Coherence** | Code quality and consistency | @code-reviewer, @backend-auditor | Code ≥ 85 |
-
-## Two-Stage Review
-
-### Stage 1: Spec Compliance (Completeness + Correctness)
-
-Auditors test from the OUTSIDE — they never read source code.
-
-Order:
-1. @visual-auditor — visual compliance vs design contract
-2. @api-compliance — API compliance vs API contract
-3. @ux-compliance — UX compliance vs design contract
-4. @integration-checker — frontend-backend integration vs API contract
-
-All must PASS before Stage 2.
-
-### Stage 2: Code Quality (Coherence)
-
-Reviewers read source code for quality.
-
-Order:
-5. @backend-auditor — backend security, performance, data integrity
-6. @code-reviewer — code quality, patterns, test coverage
-
-## Agent Memory
-
-Each agent maintains a memory file for continuity across invocations.
-
-Before invoking any agent:
-1. Read `archonflow/memory/{agent-name}.md` if it exists
-2. Pass the memory content as context to the subagent
-
-After agent completes:
-1. Update `archonflow/memory/{agent-name}.md` with:
-   - What was audited
-   - Scores given
-   - Issues found
-   - Whether previous issues were resolved
+- **HUMAN_INTERVENTION**: Fix Loop reaches max iterations after Arbiter ruling
+- **CRITICAL FAILURE**: application cannot start
 
 ## Process
 
-### Phase 1: Context Loading
+### Phase 1: Pre-Verify Setup
 
-1. Read proposal spec from `archonflow/changes/{change-name}/proposal.md`
-2. Read design contracts from `archonflow/changes/{change-name}/design.md`
-3. Read API contracts from `archonflow/changes/{change-name}/api.md`
-4. Read data layer contracts from `archonflow/changes/{change-name}/data.md`
-5. Read `archonflow/config/project.config.json`
-6. Read `archonflow/memory/` for agent memories
-7. Verify dev server is running
+1. Read `archonflow/changes/{change-name}/design.md` — design contracts
+2. Read `archonflow/changes/{change-name}/api.md` — API contracts
+3. Read `archonflow/changes/{change-name}/data.md` — data layer contracts
+4. Read `archonflow/config/project.config.json` for thresholds and profile
+5. Start the application (if not running)
+6. Wait for application to be ready
+7. Git commit current state (for Fix Loop rollback)
 
 ### Phase 2: Spec Compliance Audit (Stage 1)
+
+Stage 1 auditors test from the OUTSIDE — they never read source code.
 
 #### 2.1 Visual Audit
 
@@ -95,24 +49,32 @@ Invoke: `@visual-auditor`
 Memory: read `archonflow/memory/visual-auditor.md` before invocation.
 
 Input: running app URL, design contracts, memory
-Output: visual compliance score and findings
+Output: visual fidelity score and findings
 
-If score < 95: collect issues for fix loop.
+**Calculation-Interpretation Separation**:
+1. Run `npm run capture` — Playwright captures screenshots
+2. Run `npm run diff` — script computes pixel/color/layout differences
+3. Run `npm run score` — script calculates dimension scores
+4. Invoke `@visual-auditor` — LLM interprets the computed results only
 
-After completion, update `archonflow/memory/visual-auditor.md`.
+The visual-auditor NEVER computes color distances or pixel differences — it only reads pre-computed results and interprets them.
 
-#### 2.2 API Compliance Audit
+Threshold: ≥ {visualThreshold from config, default 95}
 
-Invoke: `@api-compliance`
+#### 2.2 API & Integration Audit
 
-Memory: read `archonflow/memory/api-compliance.md` before invocation.
+Invoke: `@api-integration-auditor`
 
-Input: running app URL, API contracts, memory
-Output: API compliance score and findings
+Memory: read `archonflow/memory/api-integration-auditor.md` before invocation.
 
-If score < 95: collect issues for fix loop.
+Input: running app URL, API contracts, data contracts, memory
+Output: API compliance score, integration score, and findings
 
-After completion, update `archonflow/memory/api-compliance.md`.
+The api-integration-auditor performs two functions:
+1. API Compliance — verify schema, status codes, error format, auth
+2. Integration Check — verify frontend-backend data flow
+
+Threshold: ≥ {apiThreshold from config, default 95}
 
 #### 2.3 UX Compliance Audit
 
@@ -123,130 +85,111 @@ Memory: read `archonflow/memory/ux-compliance.md` before invocation.
 Input: running app URL, design contracts, memory
 Output: UX compliance score and findings
 
-If score < 90: collect issues for fix loop.
+Threshold: ≥ {uxThreshold from config, default 90}
 
-After completion, update `archonflow/memory/ux-compliance.md`.
+#### Stage 1 Gate
 
-#### 2.4 Integration Check
+All Stage 1 audits must pass before proceeding to Stage 2.
+If any audit fails, enter Fix Loop for that audit.
 
-Invoke: `@integration-checker`
+### Phase 3: Fix Loop (Stage 1)
 
-Memory: read `archonflow/memory/integration-checker.md` before invocation.
+For each failing audit:
 
-Input: running app URL, API contracts, memory
-Output: integration compliance score and findings
+```
+Iteration 1:
+  1. Engineer reads audit report + memory + contracts
+  2. Engineer fixes issues
+  3. Update agent memory
+  4. Re-audit with new subagent (but with memory)
 
-If score < 90: collect issues for fix loop.
+Iteration 2:
+  1. Engineer reads audit report + memory + contracts
+  2. Engineer fixes issues
+  3. Update agent memory
+  4. Re-audit with new subagent (but with memory)
 
-After completion, update `archonflow/memory/integration-checker.md`.
+Iteration 3 (Arbiter triggered):
+  1. Invoke @system-architect as Arbiter
+  2. Arbiter reviews contract, code, and audit reports
+  3. Arbiter issues Directive
+  4. Engineer follows Directive
+  5. Re-audit
 
-### Phase 3: Fix Loop (if any Stage 1 audit failed)
+If still fails after Arbiter → HUMAN_INTERVENTION
+```
 
-If any spec compliance audit scored below threshold:
-
-**Fix Loop Rules:**
-- Maximum 3 iterations
-- Each iteration: fix → re-audit failed stages only
-- All failed stages must pass before proceeding to Stage 2
-- If max iterations reached, report remaining issues
-
-**Fix Process:**
-
-1. Collect all issues from failed audits
-2. Invoke the appropriate engineer agent to fix:
-   - Visual issues → `@frontend-engineer`
-   - API issues → `@backend-engineer`
-   - UX issues → `@frontend-engineer`
-   - Integration issues → `@frontend-engineer` + `@backend-engineer`
-3. Fix using TDD discipline (RED-GREEN-REFACTOR)
-4. Re-audit ONLY the failed stages
-5. If still failing, increment iteration counter and repeat
-6. If all pass, proceed to Stage 2
+**Git Reset Mechanism**: Before each fix attempt, the current code state is committed. If a fix makes things worse, reset to the pre-fix commit and try a different approach.
 
 ### Phase 4: Code Quality Review (Stage 2)
 
-Only proceed if ALL Stage 1 audits passed.
+Stage 2 reviewers READ source code for quality assessment.
 
-#### 4.1 Backend Audit
+#### 4.1 Code & Backend Review
 
-Invoke: `@backend-auditor`
+Invoke: `@code-backend-reviewer`
 
-Memory: read `archonflow/memory/backend-auditor.md` before invocation.
+Memory: read `archonflow/memory/code-backend-reviewer.md` before invocation.
 
-Input: source code, API contracts, data layer contracts, memory
-Output: backend quality score and findings
+Input: source code, contracts, assumption log, memory
+Output: code quality score, backend quality score, and findings
 
-If score < 85: collect issues for fix loop.
+The code-backend-reviewer performs two functions:
+1. Backend Quality — security, performance, data integrity, error handling
+2. Code Quality — readability, patterns, test coverage, assumption compliance
 
-After completion, update `archonflow/memory/backend-auditor.md`.
+Threshold: ≥ {codeThreshold from config, default 85}
 
-#### 4.2 Code Review
+#### Stage 2 Gate
 
-Invoke: `@code-reviewer`
+Code quality must pass before proceeding.
+If it fails, enter Fix Loop for code quality.
 
-Memory: read `archonflow/memory/code-reviewer.md` before invocation.
+### Phase 5: Fix Loop (Stage 2)
 
-Input: source code, design contracts, spec compliance reports, memory
-Output: code quality score and findings
-
-If score < 85: collect issues for fix loop.
-
-After completion, update `archonflow/memory/code-reviewer.md`.
-
-### Phase 5: Fix Loop (if any Stage 2 audit failed)
-
-Same fix loop rules as Phase 3, but for code quality issues:
-
-1. Collect all issues from failed reviews
-2. Invoke the appropriate engineer agent to fix
-3. Fix using TDD discipline
-4. Re-review ONLY the failed stages
-5. If still failing, increment iteration counter and repeat
-6. If all pass, proceed to final report
+Same Fix Loop mechanism as Stage 1, but for code quality issues.
 
 ### Phase 6: Final Report
 
-Generate comprehensive verification report:
+After all audits pass, generate the final verification report:
 
 ```markdown
 # Verification Report: {change-name}
 
 ## Summary
-- Overall Status: ✅ PASS / ⚠️ PARTIAL / ❌ FAIL
-- Date: YYYY-MM-DD HH:mm
+- Overall: ✅ PASS / ❌ FAIL
+- Date: {timestamp}
 
 ## Stage 1: Spec Compliance
-
 | Auditor | Score | Threshold | Status |
 |---------|-------|-----------|--------|
-| Visual | {score}/100 | ≥95 | ✅/❌ |
-| API Compliance | {score}/100 | ≥95 | ✅/❌ |
-| UX Compliance | {score}/100 | ≥90 | ✅/❌ |
-| Integration | {score}/100 | ≥90 | ✅/❌ |
+| Visual Auditor | {score} | ≥ {threshold} | ✅/❌ |
+| API & Integration Auditor | {score} | ≥ {threshold} | ✅/❌ |
+| UX Compliance | {score} | ≥ {threshold} | ✅/❌ |
 
 ## Stage 2: Code Quality
-
 | Reviewer | Score | Threshold | Status |
 |----------|-------|-----------|--------|
-| Backend Audit | {score}/100 | ≥85 | ✅/❌ |
-| Code Review | {score}/100 | ≥85 | ✅/❌ |
+| Code & Backend Reviewer | {score} | ≥ {threshold} | ✅/❌ |
 
 ## Fix Loop History
+| Iteration | Auditor | Score Change | Action |
+|-----------|---------|-------------|--------|
+| 1 | {auditor} | {before} → {after} | {action} |
 
-| Iteration | Issues Fixed | Remaining | Re-audit Result |
-|-----------|-------------|-----------|-----------------|
-| 1 | {count} | {count} | {result} |
-| 2 | {count} | {count} | {result} |
-| 3 | {count} | {count} | {result} |
+## Arbiter Directives (if any)
+{Arbiter rulings}
 
-## Detailed Findings
-{per-auditor detailed findings}
+## Assumption Log Status
+| # | Assumption | Type | Status |
+|---|-----------|------|--------|
+| 1 | {assumption} | REQUIRED/OPTIONAL | RESOLVED/PENDING |
 
-## Files Modified During Fix Loop
-{list of files modified}
+## Recommendations
+1. {recommendation}
 ```
 
-Save to: `archonflow/changes/{change-name}/verify-report.md`
+Save to `archonflow/changes/{change-name}/verify-report.md`
 
 ### Phase 7: Save and Track
 
@@ -255,27 +198,26 @@ Save to: `archonflow/changes/{change-name}/verify-report.md`
 ```markdown
 ## YYYY-MM-DD — {change-name}
 - Type: greenfield / incremental
-- Status: ✅ Verified / ⚠️ Partial / ❌ Failed
+- Status: ✅ Verified
 - Proposal: archonflow/changes/{change-name}/proposal.md
 - Design: archonflow/changes/{change-name}/design.md
 - API: archonflow/changes/{change-name}/api.md
 - Data: archonflow/changes/{change-name}/data.md
 - Plan: archonflow/changes/{change-name}/plan.md
-- Verify Report: archonflow/changes/{change-name}/verify-report.md
-- Scores: Visual={score} API={score} UX={score} Integration={score} Backend={score} Code={score}
+- Verify: archonflow/changes/{change-name}/verify-report.md
 ```
 
-2. If all audits PASS: archive change to `archonflow/specs/`
+2. Archive to `archonflow/specs/` if all audits pass
 3. Git commit
 
 ## Output
 
-- Verification report: `archonflow/changes/{change-name}/verify-report.md`
-- Audit reports: `archonflow/audits/`, `archonflow/visual-reports/`, `archonflow/ux-reports/`
-- Updated agent memories: `archonflow/memory/`
-- Updated changelog: `archonflow/changelog.md`
+- `archonflow/changes/{change-name}/verify-report.md` — verification report
+- `archonflow/audits/*.md` — individual audit reports
+- `archonflow/reviews/*.md` — code review reports
+- Updated agent memory files
 
 ## Next Step
 
-If verification passed: the change is complete. Use `/status` to view overall project status.
-If verification failed after max iterations: use `/fix` for targeted bug fixing.
+If all audits pass → project is ready for release.
+If any audit fails after max iterations → invoke `/fix` for targeted bug fixing.
