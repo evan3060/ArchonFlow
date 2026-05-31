@@ -67,7 +67,7 @@ Design Export (any tool)
 
 ---
 
-## What's New in v2.0
+## What's New in v0.2
 
 | Feature | Description |
 |---------|-------------|
