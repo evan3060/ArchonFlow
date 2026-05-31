@@ -131,6 +131,7 @@ No design tool exports available. You describe the page structure.
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
+| Init | `/archonflow:init` | Initialize directory structure, copy runtime files, configure project |
 | Proposal | `/proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
 | Design | `/design` | Generate design contracts, API contracts, data layer, plan |
 | Build | `/build` | Implement with TDD (data → backend → frontend) |
@@ -216,20 +217,18 @@ ArchonFlow uses Claude Code's native Subagent system. Each agent is defined in `
 
 ### Setup
 
-No setup needed. Copy agents and skills into your project's
-`.claude/` directory — Claude Code auto-discovers them on startup.
-
-```
-your-project/.claude/
-├── agents/             ← Subagent definitions (auto-discovered)
-│   ├── visual-auditor.md
-│   └── ...
-└── skills/             ← Pipeline skills (auto-discovered)
-    ├── proposal/SKILL.md
-    └── ...
+1. Add the plugin marketplace and install:
+```bash
+/plugin marketplace add evan3060/ArchonFlow
+/plugin install archonflow
 ```
 
-Just copy and start using `/proposal` or any skill.
+2. Initialize the project:
+```bash
+/archonflow:init
+```
+
+This creates the directory structure, copies runtime files, and configures the project. After that, use `/proposal` or any skill.
 
 ### How It Works
 
@@ -512,20 +511,7 @@ This creates a feedback loop from Build → Design, preventing the waterfall pro
 
 ## Project Structure
 
-**Plugin install** copies `agents/` and `skills/` into `.claude/` automatically.
-You only need to copy `config/`, `templates/`, `scripts/` into `archonflow/`.
-
-> Make sure you've added the marketplace first: `/plugin marketplace add evan3060/ArchonFlow`
-
-```bash
-# After /plugin install archonflow, copy runtime files:
-mkdir -p archonflow
-cp -r .claude/plugins/archonflow/config archonflow/config
-cp -r .claude/plugins/archonflow/templates archonflow/templates
-cp -r .claude/plugins/archonflow/scripts archonflow/scripts
-```
-
-After copying, your project looks like:
+After `/plugin install archonflow` and `/archonflow:init`, your project looks like:
 
 ```
 your-project/
@@ -541,7 +527,8 @@ your-project/
 │   │   ├── api-integration-auditor.md
 │   │   ├── ux-compliance.md
 │   │   └── code-backend-reviewer.md
-│   └── skills/                      # 6 pipeline skills
+│   └── skills/                      # 7 pipeline skills
+│       ├── init/SKILL.md
 │       ├── proposal/SKILL.md
 │       ├── design/SKILL.md
 │       ├── build/SKILL.md
@@ -588,27 +575,18 @@ ArchonFlow is distributed through its own plugin marketplace. Add it first:
 ### 2. Install Plugin
 
 ```bash
-# Install ArchonFlow from the marketplace
 /plugin install archonflow
 ```
 
-### 3. Copy Runtime Files
+### 3. Initialize Project
 
 ```bash
-mkdir -p archonflow
-cp -r .claude/plugins/archonflow/config archonflow/config
-cp -r .claude/plugins/archonflow/templates archonflow/templates
-cp -r .claude/plugins/archonflow/scripts archonflow/scripts
+/archonflow:init
 ```
 
-### 4. Configure Project
+This automatically creates the directory structure, copies runtime files (config, templates, scripts), and guides you through project configuration (name, design mode, profile, tech stack).
 
-Edit `archonflow/config/project.config.json`:
-- Set project name, tech stack
-- Choose design source mode (A or B)
-- Select project profile (enterprise/normal/internal)
-
-### 5. Start Pipeline
+### 4. Start Pipeline
 
 ```
 /proposal
