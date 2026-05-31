@@ -1,0 +1,20 @@
+{
+  "name": "archonflow",
+  "description": "Multi-Agent Full-Stack Delivery Pipeline. Design Contract is Law. 12 subagents with cognitive isolation, 6 pipeline skills for contract-driven development.",
+  "version": "1.0.0",
+  "author": {
+    "name": "ArchonFlow"
+  },
+  "homepage": "https://github.com/evan3060/ArchonFlow",
+  "repository": "https://github.com/evan3060/ArchonFlow",
+  "license": "MIT",
+  "keywords": [
+    "multi-agent",
+    "design-contract",
+    "visual-audit",
+    "frontend",
+    "backend",
+    "pipeline",
+    "subagent"
+  ]
+}

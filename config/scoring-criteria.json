@@ -1,0 +1,160 @@
+{
+  "version": "1.0.0",
+  "description": "Scoring criteria for visual fidelity audit in ArchonFlow",
+
+  "dimensions": {
+    "color": {
+      "weight": 0.25,
+      "description": "All colors match Design Contract tokens",
+      "method": "CIEDE2000 color distance on computed background-color, color, border-color",
+      "thresholds": {
+        "exact_match": 100,
+        "delta_e_00_lt_2": 98,
+        "delta_e_00_2_to_5": 85,
+        "delta_e_00_5_to_10": 60,
+        "delta_e_00_gt_10": 0
+      }
+    },
+    "typography": {
+      "weight": 0.20,
+      "description": "Font family, size, weight, line-height match Contract",
+      "sub_dimensions": {
+        "font_family": {
+          "weight": 0.30,
+          "exact_match": 100,
+          "fallback_match": 50,
+          "mismatch": 0
+        },
+        "font_size": {
+          "weight": 0.30,
+          "tolerance_px": 1,
+          "exact_match": 100,
+          "within_tolerance": 95,
+          "outside_tolerance": 0
+        },
+        "font_weight": {
+          "weight": 0.25,
+          "exact_match": 100,
+          "mismatch": 0
+        },
+        "line_height": {
+          "weight": 0.15,
+          "tolerance_px": 2,
+          "exact_match": 100,
+          "within_tolerance": 95,
+          "outside_tolerance": 0
+        }
+      }
+    },
+    "spacing": {
+      "weight": 0.20,
+      "description": "Padding, margin, gap match Contract",
+      "method": "Compare computed padding, margin, gap against Contract values",
+      "tolerance_px": 2,
+      "scoring": {
+        "exact_match": 100,
+        "within_2px": 90,
+        "within_4px": 70,
+        "within_8px": 40,
+        "beyond_8px": 0
+      }
+    },
+    "radius": {
+      "weight": 0.15,
+      "description": "Border-radius matches Contract",
+      "method": "Compare computed border-radius against Contract values",
+      "tolerance_px": 1,
+      "scoring": {
+        "exact_match": 100,
+        "within_1px": 95,
+        "within_2px": 80,
+        "within_4px": 50,
+        "beyond_4px": 0
+      }
+    },
+    "layout": {
+      "weight": 0.15,
+      "description": "Structure, alignment, positioning match Contract",
+      "sub_dimensions": {
+        "element_count": {
+          "weight": 0.30,
+          "description": "Correct number of child elements",
+          "exact_match": 100,
+          "missing_or_extra_per_element": -20
+        },
+        "alignment": {
+          "weight": 0.30,
+          "description": "Flex/grid alignment matches Contract",
+          "exact_match": 100,
+          "mismatch": 0
+        },
+        "positioning": {
+          "weight": 0.20,
+          "description": "Element positioning (absolute, relative, etc.)",
+          "exact_match": 100,
+          "mismatch": 0
+        },
+        "order": {
+          "weight": 0.20,
+          "description": "Element order matches Contract",
+          "exact_match": 100,
+          "mismatch": 0
+        }
+      }
+    },
+    "shadow": {
+      "weight": 0.05,
+      "description": "Box-shadow matches Contract",
+      "method": "Compare computed box-shadow against Contract values",
+      "scoring": {
+        "exact_match": 100,
+        "minor_diff": 70,
+        "major_diff": 30,
+        "missing_or_extra": 0
+      }
+    }
+  },
+
+  "overall": {
+    "calculation": "weighted_average",
+    "verdicts": {
+      "pass": {
+        "min": 95,
+        "max": 100,
+        "action": "Proceed to UX Compliance audit"
+      },
+      "fix_required": {
+        "min": 85,
+        "max": 94,
+        "action": "Frontend Engineer must fix issues, then re-audit"
+      },
+      "reject": {
+        "min": 0,
+        "max": 84,
+        "action": "Full re-implementation required from Design Contract"
+      }
+    }
+  },
+
+  "audit_phases": {
+    "phase1_static": {
+      "description": "DOM style inspection via Playwright",
+      "weight_in_overall": 0.6,
+      "fast": true
+    },
+    "phase2_visual": {
+      "description": "Pixel-level screenshot diff",
+      "weight_in_overall": 0.4,
+      "fast": false
+    }
+  },
+
+  "ignore_regions": {
+    "default_selectors": [
+      "[data-dynamic]",
+      ".loading-skeleton",
+      ".timestamp"
+    ],
+    "custom": []
+  }
+}

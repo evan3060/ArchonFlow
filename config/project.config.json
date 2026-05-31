@@ -1,0 +1,231 @@
+{
+  "_comment": "ArchonFlow Project Configuration — Edit this file to match your project",
+
+  "project": {
+    "name": "",
+    "description": "",
+    "version": "0.1.0",
+
+    "techStack": {
+      "framework": "",
+      "language": "typescript",
+      "styling": "",
+      "stateManagement": "",
+      "buildTool": ""
+    },
+
+    "backendTech": {
+      "framework": "",
+      "language": "",
+      "orm": "",
+      "database": "",
+      "sourceDir": ""
+    }
+  },
+
+  "designSource": {
+    "mode": "",
+    "tool": "",
+    "exportFormat": "html+css",
+    "designDoc": "DESIGN.md",
+
+    "supportedTools": ["stitch", "figma", "sketch", "xd"],
+
+    "autoDiscovery": {
+      "enabled": true,
+      "searchPatterns": {
+        "stitch": {
+          "html": ["**/stitch*/**/*.html", "**/stitch-*/**/*.html"],
+          "screenshots": ["**/screenshots/**/*.png", "**/screenshots/**/*.jpg"],
+          "keywords": ["stitch"]
+        },
+        "figma": {
+          "html": ["**/figma*/**/*.html", "**/figma-export/**/*.html"],
+          "screenshots": ["**/figma*/**/*.png"],
+          "keywords": ["figma"]
+        },
+        "generic": {
+          "html": ["**/design*/**/*.html", "**/design-references/**/*.html"],
+          "screenshots": ["**/design*/**/*.png", "**/design*/**/*.jpg"],
+          "keywords": ["design"]
+        }
+      },
+      "fallbackDir": "design-references/"
+    },
+
+    "toolConfig": {
+      "stitch": {
+        "exportStructure": "flat",
+        "assetHandling": "inline",
+        "namingPatterns": {
+          "html": ["{page}.html", "unknown-{id}.html"],
+          "screenshot": ["{page}.png", "{page}.jpg"]
+        }
+      },
+      "figma": {
+        "exportStructure": "per-frame",
+        "assetHandling": "export",
+        "apiToken": ""
+      }
+    }
+  },
+
+  "pipeline": {
+    "mode": "",
+    "visualAudit": true,
+    "uxAudit": true,
+    "apiCompliance": true,
+    "codeReview": true,
+    "maxRepairIterations": 3,
+
+    "gates": [
+      { "agent": "visualAuditor", "minScore": 95, "blocks": "uxCompliance" },
+      { "agent": "uxCompliance", "minVerdict": "CONDITIONAL", "blocks": "codeReviewer" },
+      { "agent": "integrationChecker", "minScore": 90, "blocks": "codeReviewer" },
+      { "agent": "codeReviewer", "minVerdict": "APPROVE", "blocks": "deployment" }
+    ]
+  },
+
+  "directories": {
+    "source": "src/",
+    "pages": "src/pages/",
+    "components": "src/components/",
+    "composables": "src/composables/",
+    "styles": "src/styles/",
+    "tokens": "src/styles/tokens/",
+    "designContract": "archonflow/contracts/",
+    "auditReports": "archonflow/audits/",
+    "uxReports": "archonflow/ux-reports/",
+    "reviewReports": "archonflow/reports/",
+    "mockData": "archonflow/mock/",
+    "designReferences": "design-references/",
+    "templates": "archonflow/templates/",
+    "memory": "archonflow/memory/"
+  },
+
+  "scoring": {
+    "thresholds": {
+      "pass": 95,
+      "fixRequired": 85,
+      "reject": 0
+    },
+
+    "dimensions": {
+      "color": { "weight": 0.25, "enabled": true },
+      "typography": { "weight": 0.20, "enabled": true },
+      "spacing": { "weight": 0.20, "enabled": true },
+      "radius": { "weight": 0.15, "enabled": true },
+      "layout": { "weight": 0.15, "enabled": true },
+      "shadow": { "weight": 0.05, "enabled": true }
+    },
+
+    "backendDimensions": {
+      "schemaCompliance": { "weight": 0.40 },
+      "statusCodeAccuracy": { "weight": 0.20 },
+      "edgeCaseHandling": { "weight": 0.20 },
+      "dataIntegrity": { "weight": 0.20 }
+    },
+
+    "colorComparison": {
+      "method": "ciede2000",
+      "thresholds": {
+        "imperceptible": 2,
+        "slight": 5,
+        "visible": 10
+      }
+    },
+
+    "spacingTolerance": {
+      "exact": 0,
+      "acceptable": 2,
+      "warning": 4,
+      "critical": 8
+    }
+  },
+
+  "viewports": {
+    "mobile": { "width": 375, "height": 812, "deviceScaleFactor": 3 },
+    "tablet": { "width": 768, "height": 1024, "deviceScaleFactor": 2 },
+    "desktop": { "width": 1440, "height": 900, "deviceScaleFactor": 2 }
+  },
+
+  "audit": {
+    "phases": ["static", "visual"],
+    "phaseWeights": {
+      "static": 0.6,
+      "visual": 0.4
+    },
+    "screenshotFormat": "png",
+    "diffMethod": "pixel",
+    "ignoreDynamicContent": true,
+    "defaultIgnoreSelectors": [
+      "[data-dynamic]",
+      ".loading-skeleton",
+      ".timestamp"
+    ]
+  },
+
+  "agents": {
+    "systemArchitect": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "designAuthority": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "contractGenerator": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "apiArchitect": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "mockServerGenerator": {
+      "enabled": true,
+      "additionalRules": []
+    },
+    "designSystemGuardian": {
+      "enabled": true,
+      "tokenOutputFormats": ["json", "tailwind", "scss", "css"],
+      "additionalRules": []
+    },
+    "frontendEngineer": {
+      "enabled": true,
+      "additionalRules": [],
+      "forbiddenPatterns": []
+    },
+    "backendEngineer": {
+      "enabled": true,
+      "additionalRules": [],
+      "scope": "api-contract-layer-only"
+    },
+    "integrationChecker": {
+      "enabled": true,
+      "backendUrl": "http://localhost:3000",
+      "additionalRules": []
+    },
+    "visualAuditor": {
+      "enabled": true,
+      "playwrightConfig": {
+        "browser": "chromium",
+        "headless": true,
+        "timeout": 30000
+      },
+      "additionalRules": []
+    },
+    "uxCompliance": {
+      "enabled": true,
+      "accessibilityStandard": "WCAG-AA",
+      "minTouchTarget": 44,
+      "additionalRules": []
+    },
+    "codeReviewer": {
+      "enabled": true,
+      "maxComponentLines": 200,
+      "typeCoverageThreshold": 90,
+      "additionalRules": []
+    }
+  }
+}

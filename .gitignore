@@ -1,0 +1,6 @@
+logs.md
+logs.md.tmp
+*.tmp
+node_modules/
+dist/
+.DS_Store
