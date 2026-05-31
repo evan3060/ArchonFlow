@@ -111,6 +111,7 @@ No design tool exports available. You describe the page structure.
 | Frontend Building | `/frontend-building <target>` | Implement UI + visual audit + UX audit + code review |
 | Backend Building | `/backend-building <target>` | Implement API + compliance test + code review |
 | Integration Audit | `/integration-audit <target>` | Full-stack integration verification |
+| Bug Fix | `/bug-fix "<description>"` | Fix bugs with targeted repair + audit verification |
 | Status | `/status` | Show pipeline progress and scores |
 
 ---
@@ -507,6 +508,27 @@ No specific directory required.
 
 # Check status anytime
 /status
+```
+
+### 5. Fix Bugs After Manual Review
+
+When you find issues during manual testing:
+
+```bash
+# Visual bug
+/bug-fix "首页卡片间距偏大，按钮颜色不对"
+
+# Interaction bug
+/bug-fix "提交按钮没有 hover 效果"
+
+# Frontend logic bug
+/bug-fix "点击记录卡片报错"
+
+# Backend API bug
+/bug-fix "GET /api/records 返回 500 错误"
+
+# Full-stack bug
+/bug-fix "提交表单后接口报错，前端也没有错误提示"
 ```
 
 ---

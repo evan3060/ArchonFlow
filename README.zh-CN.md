@@ -111,6 +111,7 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 | 前端构建 | `/frontend-building <target>` | 实现 UI + 视觉审计 + UX 审计 + 代码审查 |
 | 后端构建 | `/backend-building <target>` | 实现 API + 合规测试 + 代码审查 |
 | 联调验收 | `/integration-audit <target>` | 全栈集成验证 |
+| Bug 修复 | `/bug-fix "<描述>"` | 定向修复 + 审计验证 |
 | 状态 | `/status` | 查看流水线进度和评分 |
 
 ---
@@ -506,6 +507,27 @@ cp -r /tmp/archonflow/scripts archonflow/scripts
 
 # 随时查看状态
 /status
+```
+
+### 5. 人工验收后修复 Bug
+
+当你在手动测试中发现问题时：
+
+```bash
+# 视觉问题
+/bug-fix "首页卡片间距偏大，按钮颜色不对"
+
+# 交互问题
+/bug-fix "提交按钮没有 hover 效果"
+
+# 前端逻辑 Bug
+/bug-fix "点击记录卡片报错"
+
+# 后端 API Bug
+/bug-fix "GET /api/records 返回 500 错误"
+
+# 全栈 Bug
+/bug-fix "提交表单后接口报错，前端也没有错误提示"
 ```
 
 ---
