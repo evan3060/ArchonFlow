@@ -106,12 +106,12 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 
 | 技能 | 命令 | 功能 |
 |------|------|------|
-| 立项 | `/archonflow:proposal` | 苏格拉底式问答 → 项目简报、设计源决策 |
-| 契约 | `/archonflow:contract <target>` | 生成所有契约（设计 + API + Mock 数据） |
-| 前端构建 | `/archonflow:frontend-building <target>` | 实现 UI + 视觉审计 + UX 审计 + 代码审查 |
-| 后端构建 | `/archonflow:backend-building <target>` | 实现 API + 合规测试 + 代码审查 |
-| 联调验收 | `/archonflow:integration-audit <target>` | 全栈集成验证 |
-| 状态 | `/archonflow:status` | 查看流水线进度和评分 |
+| 立项 | `/proposal` | 苏格拉底式问答 → 项目简报、设计源决策 |
+| 契约 | `/contract <target>` | 生成所有契约（设计 + API + Mock 数据） |
+| 前端构建 | `/frontend-building <target>` | 实现 UI + 视觉审计 + UX 审计 + 代码审查 |
+| 后端构建 | `/backend-building <target>` | 实现 API + 合规测试 + 代码审查 |
+| 联调验收 | `/integration-audit <target>` | 全栈集成验证 |
+| 状态 | `/status` | 查看流水线进度和评分 |
 
 ---
 
@@ -206,7 +206,7 @@ your-project/.claude/
     └── ...
 ```
 
-只需复制即可开始使用 `/archonflow:proposal` 或任何技能。
+只需复制即可开始使用 `/proposal` 或任何技能。
 
 ### 工作原理
 
@@ -490,22 +490,22 @@ cp -r /tmp/archonflow/scripts archonflow/scripts
 
 ```bash
 # 第 1 步：创建项目立项（交互式）
-/archonflow:proposal
+/proposal
 
 # 第 2 步：生成所有契约
-/archonflow:contract analysis
+/contract analysis
 
 # 第 3 步：构建前端（含视觉审计）
-/archonflow:frontend-building analysis
+/frontend-building analysis
 
 # 第 4 步：构建后端（含 API 合规）
-/archonflow:backend-building analysis
+/backend-building analysis
 
 # 第 5 步：联调验收
-/archonflow:integration-audit analysis
+/integration-audit analysis
 
 # 随时查看状态
-/archonflow:status
+/status
 ```
 
 ---

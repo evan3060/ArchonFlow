@@ -106,12 +106,12 @@ No design tool exports available. You describe the page structure.
 
 | Skill | Command | What It Does |
 |-------|---------|-------------|
-| Proposal | `/archonflow:proposal` | Socratic Q&A → project brief, design source decision |
-| Contract | `/archonflow:contract <target>` | Generate all contracts (design + API + mock data) |
-| Frontend Building | `/archonflow:frontend-building <target>` | Implement UI + visual audit + UX audit + code review |
-| Backend Building | `/archonflow:backend-building <target>` | Implement API + compliance test + code review |
-| Integration Audit | `/archonflow:integration-audit <target>` | Full-stack integration verification |
-| Status | `/archonflow:status` | Show pipeline progress and scores |
+| Proposal | `/proposal` | Socratic Q&A → project brief, design source decision |
+| Contract | `/contract <target>` | Generate all contracts (design + API + mock data) |
+| Frontend Building | `/frontend-building <target>` | Implement UI + visual audit + UX audit + code review |
+| Backend Building | `/backend-building <target>` | Implement API + compliance test + code review |
+| Integration Audit | `/integration-audit <target>` | Full-stack integration verification |
+| Status | `/status` | Show pipeline progress and scores |
 
 ---
 
@@ -206,7 +206,7 @@ your-project/.claude/
     └── ...
 ```
 
-Just copy and start using `/archonflow:proposal` or any skill.
+Just copy and start using `/proposal` or any skill.
 
 ### How It Works
 
@@ -491,22 +491,22 @@ No specific directory required.
 
 ```bash
 # Step 1: Create project proposal (interactive)
-/archonflow:proposal
+/proposal
 
 # Step 2: Generate all contracts
-/archonflow:contract analysis
+/contract analysis
 
 # Step 3: Build frontend (with visual audit)
-/archonflow:frontend-building analysis
+/frontend-building analysis
 
 # Step 4: Build backend (with API compliance)
-/archonflow:backend-building analysis
+/backend-building analysis
 
 # Step 5: Integration audit
-/archonflow:integration-audit analysis
+/integration-audit analysis
 
 # Check status anytime
-/archonflow:status
+/status
 ```
 
 ---
