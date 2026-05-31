@@ -515,6 +515,8 @@ This creates a feedback loop from Build → Design, preventing the waterfall pro
 **Plugin install** copies `agents/` and `skills/` into `.claude/` automatically.
 You only need to copy `config/`, `templates/`, `scripts/` into `archonflow/`.
 
+> Make sure you've added the marketplace first: `/plugin marketplace add evan3060/ArchonFlow`
+
 ```bash
 # After /plugin install archonflow, copy runtime files:
 mkdir -p archonflow
@@ -572,14 +574,25 @@ Design files are **auto-discovered** — wherever they are in the project, the p
 
 ## Quick Start
 
-### 1. Install Plugin
+### 1. Add Plugin Marketplace
+
+ArchonFlow is distributed through its own plugin marketplace. Add it first:
 
 ```bash
-# In Claude Code
+# In Claude Code, add the ArchonFlow marketplace
+/plugin marketplace add evan3060/ArchonFlow
+```
+
+> **What is a plugin marketplace?** Claude Code plugins are distributed through marketplaces — curated catalogs hosted in Git repositories. You need to add a marketplace before you can install plugins from it. See [Claude Code Plugin Marketplaces](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces) for details.
+
+### 2. Install Plugin
+
+```bash
+# Install ArchonFlow from the marketplace
 /plugin install archonflow
 ```
 
-### 2. Copy Runtime Files
+### 3. Copy Runtime Files
 
 ```bash
 mkdir -p archonflow
@@ -588,14 +601,14 @@ cp -r .claude/plugins/archonflow/templates archonflow/templates
 cp -r .claude/plugins/archonflow/scripts archonflow/scripts
 ```
 
-### 3. Configure Project
+### 4. Configure Project
 
 Edit `archonflow/config/project.config.json`:
 - Set project name, tech stack
 - Choose design source mode (A or B)
 - Select project profile (enterprise/normal/internal)
 
-### 4. Start Pipeline
+### 5. Start Pipeline
 
 ```
 /proposal
