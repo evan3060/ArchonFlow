@@ -60,6 +60,21 @@ Design Export (any tool)
   │  Arbiter: System Architect resolves deadlocks           │
   └─────────────────────────────────────────────────────────┘
         ↓
+  ┌─ /archonflow:fix "<bug>" ───────────────────────────────┐
+  │  Bug Analysis         ← Root cause from audit reports   │
+  │  Git Checkpoint       ← Commit before fix (rollback)    │
+  │  Targeted Fix         ← Frontend/Backend Engineer       │
+  │  Re-audit             ← Verify fix passes threshold     │
+  │  Fix Loop             ← Max 3 iterations + Arbiter      │
+  │  Git Reset            ← Rollback if fix makes worse     │
+  └─────────────────────────────────────────────────────────┘
+
+  ┌─ /archonflow:status ────────────────────────────────────┐
+  │  Pipeline Progress     ← Change status per phase        │
+  │  Audit Scores          ← All auditor scores vs thresh   │
+  │  Changelog             ← Full history of changes        │
+  └─────────────────────────────────────────────────────────┘
+        ↓
   Ship
 ```
 
