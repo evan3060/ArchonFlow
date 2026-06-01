@@ -34,7 +34,7 @@ Design Export (any tool)
   │  Spec Generation      ← Proposal document               │
   └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ /design ───────────────────────────────────────────────┐
+  ┌─ /archonflow:design ─────────────────────────────────────┐
   │  System Architect     ← Architecture, modules, Arbiter  │
   │  Design Authority     ← Interpret → Contract → Tokens   │
   │  Data Architect       ← Database schema, migrations     │
@@ -43,13 +43,13 @@ Design Export (any tool)
   │  Implementation Plan  ← Micro-task decomposition        │
   └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ /build ────────────────────────────────────────────────┐
+  ┌─ /archonflow:build ─────────────────────────────────────┐
   │  Backend Engineer     ← Data layer + API (TDD)          │
   │  Frontend Engineer    ← UI implementation (TDD)         │
   │  Integration Wiring   ← Frontend ↔ Backend connection   │
   └─────────────────────────────────────────────────────────┘
         ↓
-  ┌─ /verify ───────────────────────────────────────────────┐
+  ┌─ /archonflow:verify ─────────────────────────────────────┐
   │  Stage 1: Spec Compliance                               │
   │    Visual Auditor      ← Visual fidelity (≥95)          │
   │    API & Integration   ← API match + Integration (≥95)  │
