@@ -1,10 +1,22 @@
 {
-  "version": "0.3.0",
-  "description": "Scoring criteria for visual fidelity audit in ArchonFlow",
+  "version": "0.4.0",
+  "description": "Scoring criteria for visual fidelity audit in ArchonFlow — v0.4.0 adds contract_assertion gate-keeping dimension",
 
   "dimensions": {
+    "contract_assertion": {
+      "weight": 0.40,
+      "description": "Contract assertion compliance — all compiled assertions from design.md must PASS",
+      "method": "Deterministic Playwright checks via contract-assert.ts",
+      "pass_threshold": 100,
+      "gate_keeping": true,
+      "gate_keeping_rule": "If ANY assertion FAILS, overall score is capped at 60 regardless of other dimensions",
+      "scoring": {
+        "all_pass": 100,
+        "any_fail": 0
+      }
+    },
     "color": {
-      "weight": 0.25,
+      "weight": 0.15,
       "description": "All colors match Design Contract tokens",
       "method": "CIEDE2000 color distance on computed background-color, color, border-color",
       "thresholds": {
@@ -16,7 +28,7 @@
       }
     },
     "typography": {
-      "weight": 0.20,
+      "weight": 0.15,
       "description": "Font family, size, weight, line-height match Contract",
       "sub_dimensions": {
         "font_family": {
@@ -47,7 +59,7 @@
       }
     },
     "spacing": {
-      "weight": 0.20,
+      "weight": 0.15,
       "description": "Padding, margin, gap match Contract",
       "method": "Compare computed padding, margin, gap against Contract values",
       "tolerance_px": 2,
@@ -57,19 +69,6 @@
         "within_4px": 70,
         "within_8px": 40,
         "beyond_8px": 0
-      }
-    },
-    "radius": {
-      "weight": 0.15,
-      "description": "Border-radius matches Contract",
-      "method": "Compare computed border-radius against Contract values",
-      "tolerance_px": 1,
-      "scoring": {
-        "exact_match": 100,
-        "within_1px": 95,
-        "within_2px": 80,
-        "within_4px": 50,
-        "beyond_4px": 0
       }
     },
     "layout": {
@@ -100,6 +99,19 @@
           "exact_match": 100,
           "mismatch": 0
         }
+      }
+    },
+    "radius": {
+      "weight": 0.05,
+      "description": "Border-radius matches Contract",
+      "method": "Compare computed border-radius against Contract values",
+      "tolerance_px": 1,
+      "scoring": {
+        "exact_match": 100,
+        "within_1px": 95,
+        "within_2px": 80,
+        "within_4px": 50,
+        "beyond_4px": 0
       }
     },
     "shadow": {

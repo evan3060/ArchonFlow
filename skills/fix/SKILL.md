@@ -1,11 +1,11 @@
 ---
 name: fix
-description: "Targeted bug fixing with audit verification. Fixes specific issues and re-audits to confirm. Includes Arbiter mechanism for Fix Loop deadlocks and Git Reset for rollback."
+description: "Targeted bug fixing with three-layer verification (Contract Assertion → VRT → Human). Includes Arbiter mechanism for Fix Loop deadlocks and Git Reset for rollback."
 ---
 
 # Fix Skill
 
-Targeted bug fixing with audit verification. Fixes specific issues identified during verification or reported by the user, then re-audits to confirm the fix.
+Targeted bug fixing with three-layer verification. Fixes specific issues identified during verification or reported by the user, then verifies using Contract Assertion → VRT → Human Confirmation.
 
 ## ArchonFlow Core Rules
 
@@ -14,13 +14,14 @@ Targeted bug fixing with audit verification. Fixes specific issues identified du
 3. **Design Authority has final interpretation** — disputes resolved by Authority
 4. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
 5. **Git Reset in Fix Loop** — commit before fix, rollback if fix makes things worse
+6. **Three-Layer Verification** — Contract Assertion (deterministic) → VRT (perceptual) → Human (HITL)
 
 ## Usage
 
 ```
-/fix "Login button doesn't navigate to dashboard"
-/fix "API returns 500 on empty body"
-/fix "Visual audit score 82, below threshold 95"
+/archonflow:fix "Login button doesn't navigate to dashboard"
+/archonflow:fix "API returns 500 on empty body"
+/archonflow:fix "Visual audit score 82, below threshold 95"
 ```
 
 ## Process
@@ -69,17 +70,74 @@ Invoke in sequence: `@backend-engineer` then `@frontend-engineer`
 
 ### Phase 4: Fix Verification
 
-After the fix, re-run the relevant audit:
+After the fix, detect bug type from changed files and run the appropriate verification:
 
-| Bug Type | Re-audit With |
-|----------|--------------|
-| Visual issue | `@visual-auditor` |
-| API issue | `@api-integration-auditor` |
-| UX issue | `@ux-compliance` |
-| Code quality issue | `@code-backend-reviewer` |
+**Step 1: Detect bug type from changed files**
+- If changed files include .vue/.css/.scss/.less/.svg → VISUAL bug
+- If changed files include .api./.route./.controller. → API bug
+- Otherwise → infer from bug description
 
-If the audit passes → fix confirmed.
-If the audit fails → enter Fix Loop.
+**Step 2: Run verification by bug type**
+
+#### Visual Bug — Three-Layer Verification
+
+```
+┌─ Visual Bug Verification ──────────────────────────────────┐
+│                                                            │
+│ 4.1 Contract Assertion (Deterministic)                     │
+│     Run: npx ts-node scripts/contract-assert.ts            │
+│          <url> <assertions.json> <results-dir>             │
+│     Input: contracts/assertions.json                       │
+│     Output: Violation Report (PASS/FAIL per item)          │
+│     If ALL PASS → proceed to 4.2                           │
+│     If ANY FAIL → Engineer MUST read Violation Report      │
+│       and fix ONLY the violated items                      │
+│       Re-run 4.1 until ALL PASS                            │
+│                                                            │
+│ 4.2 VRT Visual Regression (Perceptual)                     │
+│     Run: npx ts-node scripts/vrt-assert.ts                 │
+│          <url> [config] [results-dir]                      │
+│     Input: Baseline screenshots + Actual screenshots       │
+│     Output: Diff rate + Three-Image Context                │
+│     If diff < 1% → proceed to 4.3                          │
+│     If diff ≥ 1% → Visual Auditor reads Three-Image        │
+│       Context → generates Visual_Fix_Spec                  │
+│       → Engineer fixes per Visual_Fix_Spec                 │
+│       → Re-run 4.1 + 4.2                                   │
+│                                                            │
+│ 4.3 Human Confirmation (HITL)                              │
+│     If AI fix fails 2 times → HITL                         │
+│     Terminal outputs screenshot paths:                      │
+│       Baseline: test/vrt/baselines/{component}.png         │
+│       Actual:   test/vrt/results/{component}-actual.png    │
+│       Diff:     test/vrt/results/{component}-diff.png      │
+│     Wait for user input:                                   │
+│       y = approved, proceed                                │
+│       n = rejected, enter Fix Loop                         │
+│       u = update baseline (with drift warning)             │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### API Bug — Contract Testing
+
+```
+┌─ API Bug Verification ─────────────────────────────────────┐
+│ Run: API contract tests (from archonflow/specs/)            │
+│ Run: @api-integration-auditor                               │
+│ If ALL PASS → fix confirmed                                 │
+│ If ANY FAIL → enter Fix Loop                                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### Code Quality Bug — Code Review
+
+```
+┌─ Code Quality Verification ────────────────────────────────┐
+│ Run: @code-backend-reviewer                                 │
+│ If score ≥ threshold → fix confirmed                        │
+│ If score < threshold → enter Fix Loop                       │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Phase 5: Fix Loop
 
@@ -88,25 +146,30 @@ Iteration 1:
   1. Engineer reads audit report + memory + contracts
   2. Engineer fixes issues
   3. Update agent memory
-  4. Re-audit
+  4. Re-run Phase 4 verification
 
 Iteration 2:
   1. Engineer reads audit report + memory + contracts
   2. Engineer fixes issues
   3. Update agent memory
-  4. Re-audit
+  4. Re-run Phase 4 verification
 
 Iteration 3 (Arbiter triggered):
   1. Invoke @system-architect as Arbiter
   2. Arbiter reviews contract, code, and audit reports
   3. Arbiter issues Directive
   4. Engineer follows Directive
-  5. Re-audit
+  5. Re-run Phase 4 verification
 
 If still fails after Arbiter → HUMAN_INTERVENTION
 ```
 
-**Git Reset Mechanism**: If a fix attempt makes things worse (score decreases), rollback to the checkpoint commit and try a different approach.
+**Git Reset Mechanism**: If a fix attempt makes things worse (score decreases or new violations appear), rollback to the checkpoint commit and try a different approach.
+
+**Baseline Drift Protection**: If user chooses `u` (update baseline) in HITL:
+- Log to `test/vrt/changelog.vrt.md` with timestamp, component name, and diff rate
+- Mark the baseline update with `[WARN] Baseline drift` tag
+- This ensures intentional baseline changes are tracked and auditable
 
 ### Phase 6: Fix Report
 
@@ -125,9 +188,11 @@ Generate the fix report:
 {what was changed and why}
 
 ## Verification
-| Auditor | Before | After | Threshold | Status |
-|---------|--------|-------|-----------|--------|
-| {auditor} | {before} | {after} | ≥ {threshold} | ✅/❌ |
+| Layer | Before | After | Threshold | Status |
+|-------|--------|-------|-----------|--------|
+| Contract Assertion | {fail count} | 0 | ALL PASS | ✅/❌ |
+| VRT Diff | {before}% | {after}% | < 1% | ✅/❌ |
+| Human Confirm | - | y/n | - | ✅/❌ |
 
 ## Fix Loop History
 | Iteration | Score Change | Action |
@@ -136,6 +201,11 @@ Generate the fix report:
 
 ## Arbiter Directives (if any)
 {Arbiter rulings}
+
+## Baseline Updates (if any)
+| Component | Diff Rate | Reason | Timestamp |
+|-----------|-----------|--------|-----------|
+| {name} | {rate}% | human_override | {ts} |
 
 ## Assumption Updates
 | # | Assumption | Change |
@@ -156,11 +226,14 @@ Save to `archonflow/changes/{change-name}/fix-report.md`
 - Fix: archonflow/changes/{change-name}/fix-report.md
 ```
 
-2. Git commit with message: `fix: {bug description} — score {after}`
+2. Git commit with message: `fix: {bug description} — assertion PASS, VRT diff {rate}%`
 
 ## Output
 
 - Fixed source code in src/
 - `archonflow/changes/{change-name}/fix-report.md` — fix report
+- `test/vrt/results/contract-violation-report.md` — assertion results
+- `test/vrt/results/vrt-report.md` — VRT results
+- `test/vrt/results/*-three-image-context.md` — Three-Image Context (if VRT failed)
 - Updated audit reports
 - Updated agent memory files

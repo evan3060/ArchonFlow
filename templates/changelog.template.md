@@ -8,10 +8,13 @@ All changes tracked here. Each entry represents a single Change in the pipeline.
 - Status: 📋 Proposed / 🎨 Designed / 🔨 Built / ✅ Verified / ⚠️ Partial / ❌ Failed
 - Proposal: archonflow/changes/{change-name}/proposal.md
 - Design: archonflow/changes/{change-name}/design.md
+- Assertions: archonflow/changes/{change-name}/assertions.json
 - API: archonflow/changes/{change-name}/api.md
 - Data: archonflow/changes/{change-name}/data.md
 - Plan: archonflow/changes/{change-name}/plan.md
 - Verify Report: archonflow/changes/{change-name}/verify-report.md
 - Fix Report: archonflow/changes/{change-name}/fix-report.md
+- Contract Assertion: {PASS/FAIL} ({pass_count}/{total})
+- VRT Diff: {rate}%
 - Scores: Visual={score} API={score} UX={score} Integration={score} Backend={score} Code={score}
 -->

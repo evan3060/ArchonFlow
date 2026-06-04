@@ -80,22 +80,35 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
 
 ---
 
-## v0.3 新特性
+## v0.4 新特性
 
 | 特性 | 说明 |
 |------|------|
-| **Agent 精简（15→10）** | 合并同视角 Agent，减少上下文切换，保持认知隔离 |
-| **Design Authority（合并）** | 设计解释 + 契约生成 + Token 提取，一个 Agent 完成 |
-| **API & Integration Auditor（合并）** | API 合规 + 集成测试统一为黑盒测试 |
-| **Code & Backend Reviewer（合并）** | 代码质量 + 后端审计统一为白盒审查 |
-| **API Architect + Mock（合并）** | API 契约设计 + Mock 数据生成一体化 |
-| **Arbiter 仲裁机制** | System Architect 解决 Fix Loop 中的认知死锁 |
-| **Assumption Log 假设日志** | 记录实现假设，分类为 REQUIRED/OPTIONAL/FORBIDDEN |
-| **精准上下文注入** | 基于模块依赖图，仅向 Agent 注入相关文件 |
-| **Git Reset 机制** | Fix Loop 前自动提交，失败时回滚到初始状态 |
-| **算审分离** | 脚本计算色差/像素差异，LLM 仅负责解读结果 |
-| **项目预设** | Enterprise/Normal/Internal 三档阈值预设 |
-| **契约争议协议** | 构建 Agent 可质疑契约，Design Authority 最终裁决 |
+| **契约断言层** | 从设计契约编译机器可执行断言，消除解释漂移 |
+| **三图流 VRT** | Baseline + Actual + Diff 截图，精确视觉回归测试 |
+| **契约编译器** | 脚本从结构化 DSL 生成断言文件，避免 LLM 幻觉 |
+| **视觉影响分析** | 智能检测代码变更是否影响视觉，自动触发 VRT |
+| **可行性检查** | 构建前验证契约的技术可行性和平台兼容性 |
+| **增强 Judge 模式** | Visual Auditor 输出结构化 Violation Report，明确验收标准 |
+| **HITL 人工确认** | AI 修复失败两次后触发人工确认，含 Baseline 漂移保护 |
+
+### 设计权衡（v0.3 → v0.4）
+
+v0.4 升级源于一次真实失败：Tab Bar 图标文字对齐问题"修复"4次仍未解决。根因分析发现：
+
+1. **视觉审计依赖 CSS 属性检查** — `align-items: center` 已设置，但图标 SVG 有内边距导致视觉偏移，审计器无法检测
+2. **缺乏人工确认环节** — 修复后直接进入机器审计，跳过用户验证
+3. **设计契约不完整** — 契约未规定精确的图标-文字间距和对齐容差
+
+**关键权衡：**
+
+| 决策 | 选择 | 放弃 | 原因 |
+|------|------|------|------|
+| 断言生成 | 脚本（Contract Compiler） | LLM 生成 | LLM 引入"第二翻译层"漂移 |
+| 视觉验证 | 三层（断言→VRT→HITL） | 单层 VRT | 单层 VRT 无法捕获"CSS 看起来对但视觉偏移"的问题 |
+| Baseline 管理 | 可审计变更日志 + 漂移警告 | 静默自动更新 | 静默更新会掩盖真实回归 |
+| 可行性检查 | 构建前门控 | 构建后发现 | 尽早发现不可能的契约，减少返工 |
+| 评分权重 | contract_assertion = 40% | 等权重 | 契约合规是基础，其他维度是次要的 |
 
 ---
 
@@ -148,11 +161,22 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 |------|------|------|
 | 初始化 | `/archonflow:init` | 创建目录结构、复制运行时文件、配置项目 |
 | 提案 | `/archonflow:proposal` | 上下文感知问答 → 提案规格（全新/增量） |
-| 设计 | `/archonflow:design` | 生成设计契约、API 契约、数据层、计划 |
+| 设计 | `/archonflow:design` | 生成设计契约、API 契约、数据层、计划 + 编译断言 + 可行性检查 |
 | 构建 | `/archonflow:build` | TDD 实现（数据 → 后端 → 前端） |
 | 验证 | `/archonflow:verify` | 两阶段审计 + Fix Loop + Arbiter |
-| 修复 | `/archonflow:fix "<描述>"` | 定向 Bug 修复 + 审计验证 |
+| 修复 | `/archonflow:fix "<描述>"` | 定向 Bug 修复 + 三层验证（断言→VRT→HITL） |
 | 状态 | `/archonflow:status` | 显示流水线进度、评分、变更日志 |
+
+### 验证脚本
+
+| 脚本 | 命令 | 功能 |
+|------|------|------|
+| 契约编译器 | `npm run contract:compile` | 编译 Layout Contract DSL → assertions.json |
+| 契约断言 | `npm run contract:assert` | 运行确定性 Playwright 断言 |
+| VRT Baseline | `npm run vrt:baseline -- --init <url>` | 生成基准截图 |
+| VRT 断言 | `npm run vrt:assert` | 运行视觉回归测试（三图流） |
+| 视觉影响 | `npm run visual:impact` | 分析 git diff 的视觉影响 |
+| 可行性检查 | `npm run feasibility` | 构建前检查契约技术可行性 |
 
 ---
 
@@ -361,16 +385,19 @@ archonflow/changes/{change-name}/
 
 ## 评分系统
 
-### 视觉审计评分
+### 视觉审计评分（v0.4.0）
 
 | 维度 | 权重 | 检查内容 |
 |------|------|---------|
-| 颜色保真 | 25% | 所有颜色匹配契约（CIEDE2000） |
-| 排版保真 | 20% | 字体族、大小、粗细匹配 |
-| 间距保真 | 20% | 内边距、外边距、间隙匹配 |
-| 圆角保真 | 15% | border-radius 匹配 |
+| 契约断言 | 40% | 所有编译断言 PASS（门控） |
+| 颜色保真 | 15% | 所有颜色匹配契约（CIEDE2000） |
+| 排版保真 | 15% | 字体族、大小、粗细匹配 |
+| 间距保真 | 15% | 内边距、外边距、间隙匹配 |
 | 布局保真 | 15% | 结构、对齐、定位 |
+| 圆角保真 | 5% | border-radius 匹配 |
 | 阴影保真 | 5% | box-shadow 匹配 |
+
+**门控规则**：如果任何契约断言 FAIL，总分上限为 60，无论其他维度得分如何。
 
 ### API & 集成评分
 
@@ -426,11 +453,22 @@ Git 提交（回滚检查点）
     ↓
 更新 Agent 记忆文件
     ↓
-审计者（新子代理，但有记忆，重新审计）
+三层验证（视觉 Bug）：
+  Layer 1: 契约断言 → ALL PASS?
+  Layer 2: VRT → diff < 1%?
+  Layer 3: 人工确认 → y/n/u?（AI 修复失败 2 次后触发）
     ↓
 如果评分 ≥ 阈值 → 通过 → 进入下一审计阶段
 如果评分 < 阈值 → 再次循环
 ```
+
+**三层视觉验证**（v0.4 新增）：
+
+1. **契约断言**（确定性）— Playwright 对照编译后的 assertions.json 检查布局、间距、对齐、颜色。不涉及 LLM。
+2. **VRT**（感知性）— 像素级比对，输出三图流（Baseline/Actual/Diff）。如果 diff ≥ 1%，Visual Auditor 生成 Visual_Fix_Spec。
+3. **人工确认**（HITL）— AI 修复失败两次后，向用户展示截图，等待 y/n/u 输入。`u` 更新基准图并记录漂移日志。
+
+**Baseline 漂移保护**：所有基准图更新都记录到 `test/vrt/changelog.vrt.md`，包含时间戳、组件名、差异率和 `[WARN] Baseline drift` 标签。
 
 **Arbiter 仲裁机制**：当 Fix Loop 连续 2 次失败时，System Architect 作为仲裁者被调用。仲裁者审查契约、代码和审计报告，然后发布有约束力的 **Directive（指令）**。如果指令仍然失败 → 触发 HUMAN_INTERVENTION（人工介入）。
 

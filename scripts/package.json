@@ -1,12 +1,18 @@
 {
   "name": "archonflow",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "ArchonFlow — Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review",
   "private": true,
   "scripts": {
     "capture": "ts-node scripts/playwright-capture.ts",
     "diff": "ts-node scripts/visual-diff.ts",
-    "score": "ts-node scripts/score-calculator.ts"
+    "score": "ts-node scripts/score-calculator.ts",
+    "contract:compile": "ts-node scripts/contract-compiler.ts",
+    "contract:assert": "ts-node scripts/contract-assert.ts",
+    "vrt:baseline": "ts-node scripts/vrt-baseline.ts",
+    "vrt:assert": "ts-node scripts/vrt-assert.ts",
+    "visual:impact": "ts-node scripts/visual-impact.ts",
+    "feasibility": "ts-node scripts/feasibility-check.ts"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

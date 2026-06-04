@@ -83,6 +83,28 @@ The design-authority performs three tasks in sequence:
 2. Generate contract — produce formal Design Contracts with Given/When/Then specs
 3. Extract tokens — generate CSS custom properties / design token files
 
+**Contract DSL Format**: Design contracts MUST include a Layout Contract table for each component, using the structured DSL format that the Contract Compiler can parse:
+
+```markdown
+## Component: FloatingTabBar
+
+### Selector
+`.floating-tabbar`
+
+### Layout Contract
+| Property | Value | Tolerance |
+|----------|-------|-----------|
+| position | fixed | - |
+| bottom | 0px | 1px |
+| tab_count | 5 | exact |
+| icon_label_alignment | center-x | 2px |
+| icon_label_gap | 2px | 1px |
+| icon_size | 24x24 | 1px |
+| active_color | #156969 | ΔE00<5 |
+```
+
+This table format is machine-parseable by `scripts/contract-compiler.ts` and will be compiled into `assertions.json` for deterministic verification.
+
 ### Phase 4: Data Layer Design
 
 Invoke: `@data-architect`
@@ -193,8 +215,45 @@ After generating all contracts, perform self-review:
 4. **Mock coverage** — do mocks cover all contract scenarios?
 5. **Incremental compatibility** — do new contracts conflict with existing specs?
 6. **Assumption boundary** — are any assumptions crossing forbidden territory?
+7. **Layout Contract DSL completeness** — does every visual component have a Layout Contract table with selector, properties, and tolerances?
 
 Fix any issues inline.
+
+### Phase 8.5: Contract Compilation
+
+Compile the Layout Contract DSL tables into machine-executable assertions:
+
+```bash
+npx ts-node scripts/contract-compiler.ts \
+  archonflow/changes/{change-name}/design.md \
+  archonflow/changes/{change-name}/assertions.json
+```
+
+This produces `assertions.json` which will be used by:
+- `contract-assert.ts` for deterministic verification in the build and fix phases
+- Visual Auditor for Layer 1 verification
+
+If compilation produces warnings (e.g., unrecognized property types), fix the DSL tables in design.md and re-compile.
+
+### Phase 8.6: Feasibility Check
+
+Before proceeding to user approval, run the feasibility check:
+
+```bash
+npx ts-node scripts/feasibility-check.ts \
+  archonflow/changes/{change-name}/design.md \
+  archonflow/config/project.config.json
+```
+
+This checks:
+1. **Token consistency** — do referenced CSS custom properties exist?
+2. **Platform constraints** — are specified features supported on the target platform?
+3. **Selector validity** — can the specified CSS selectors resolve?
+4. **Contract conflicts** — do new contracts conflict with existing ones?
+5. **Behavioral spec completeness** — do interactive elements have Given/When/Then?
+
+If any FAIL items → fix the contract and re-run.
+If only WARNING items → document in assumptions.md and proceed.
 
 ### Phase 9: User Approval Gate
 
@@ -225,7 +284,8 @@ Wait for user response. Only proceed once user approves.
 ## Output
 
 - `archonflow/changes/{change-name}/analysis.md` — structural analysis with module dependency map
-- `archonflow/changes/{change-name}/design.md` — design contracts with behavioral specs
+- `archonflow/changes/{change-name}/design.md` — design contracts with behavioral specs + Layout Contract DSL
+- `archonflow/changes/{change-name}/assertions.json` — compiled assertions from Contract Compiler
 - `archonflow/changes/{change-name}/api.md` — API contracts with behavioral specs
 - `archonflow/changes/{change-name}/data.md` — data layer contracts
 - `archonflow/changes/{change-name}/plan.md` — implementation plan with micro-tasks

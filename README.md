@@ -80,22 +80,35 @@ Design Export (any tool)
 
 ---
 
-## What's New in v0.3
+## What's New in v0.4
 
 | Feature | Description |
 |---------|-------------|
-| **Agent Consolidation (15→10)** | Merged same-perspective agents to reduce context switching while preserving cognitive isolation |
-| **Design Authority (merged)** | Design interpretation + Contract generation + Token extraction in one agent |
-| **API & Integration Auditor (merged)** | API compliance + Integration testing unified as black-box testing |
-| **Code & Backend Reviewer (merged)** | Code quality + Backend audit unified as white-box review |
-| **API Architect + Mock (merged)** | API contract design + Mock data generation in one workflow |
-| **Arbiter Mechanism** | System Architect resolves Fix Loop deadlocks with binding Directives |
-| **Assumption Log** | Track implementation assumptions with REQUIRED/OPTIONAL/FORBIDDEN classification |
-| **Precision Context Injection** | Module dependency map ensures agents only load relevant files |
-| **Git Reset in Fix Loop** | Auto-commit before fix; rollback if fix makes things worse |
-| **Visual Audit Separation** | Scripts compute differences (CIEDE2000, pixel diff), LLM only interprets results |
-| **Project Profiles** | Enterprise/Normal/Internal presets with different threshold levels |
-| **Contract Dispute Protocol** | Build agents can challenge contracts; Design Authority has final say |
+| **Contract Assertion Layer** | Machine-executable assertions compiled from design contracts, eliminating interpretation drift |
+| **Three-Image Context VRT** | Baseline + Actual + Diff screenshots for precise visual regression testing |
+| **Contract Compiler** | Script-based assertion generation from structured DSL, avoiding LLM hallucination |
+| **Visual Impact Analysis** | Smart detection of visually relevant code changes to trigger VRT |
+| **Feasibility Check** | Pre-build validation of contract technical viability and platform compatibility |
+| **Enhanced Judge Mode** | Visual Auditor produces structured Violation Reports with clear acceptance criteria |
+| **HITL Confirmation** | Human-in-the-loop verification when AI fix fails twice, with Baseline Drift protection |
+
+### Design Trade-offs (v0.3 → v0.4)
+
+The v0.4 upgrade was driven by a real-world failure: Tab Bar icon-text alignment was "fixed" 4 times without success. Root cause analysis revealed:
+
+1. **Visual audit relied on CSS property checks** — `align-items: center` was set, but the icon SVG had internal padding causing visual offset. The auditor couldn't detect this.
+2. **No human confirmation step** — fixes went directly to machine audit, skipping user verification.
+3. **Incomplete design contract** — the contract didn't specify precise icon-label gap and alignment tolerances.
+
+**Key trade-offs:**
+
+| Decision | Chosen | Rejected | Why |
+|----------|--------|----------|-----|
+| Assertion generation | Script (Contract Compiler) | LLM-generated | LLM introduces "second translation layer" drift |
+| Visual verification | Three-layer (Assertion → VRT → HITL) | Single-layer VRT | Single VRT can't catch layout misalignment that "looks right" in CSS |
+| Baseline management | Auditable changelog + drift warnings | Silent auto-update | Silent updates mask real regressions |
+| Feasibility check | Pre-build gate | Post-build discovery | Catching impossible contracts early saves rework |
+| Scoring weights | contract_assertion = 40% | Equal weights | Contract compliance is the foundation; other dimensions are secondary |
 
 ---
 
@@ -148,11 +161,22 @@ No design tool exports available. You describe the page structure.
 |-------|---------|-------------|
 | Init | `/archonflow:init` | Initialize directory structure, copy runtime files, configure project |
 | Proposal | `/archonflow:proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
-| Design | `/archonflow:design` | Generate design contracts, API contracts, data layer, plan |
+| Design | `/archonflow:design` | Generate design contracts, API contracts, data layer, plan + compile assertions + feasibility check |
 | Build | `/archonflow:build` | Implement with TDD (data → backend → frontend) |
 | Verify | `/archonflow:verify` | Two-stage audit with Fix Loop and Arbiter |
-| Fix | `/archonflow:fix "<description>"` | Targeted bug fix with audit verification |
+| Fix | `/archonflow:fix "<description>"` | Targeted bug fix with three-layer verification (Assertion → VRT → HITL) |
 | Status | `/archonflow:status` | Show pipeline progress, scores, changelog |
+
+### Verification Scripts
+
+| Script | Command | What It Does |
+|--------|---------|-------------|
+| Contract Compiler | `npm run contract:compile` | Compile Layout Contract DSL → assertions.json |
+| Contract Assertion | `npm run contract:assert` | Run deterministic Playwright assertions against compiled assertions |
+| VRT Baseline | `npm run vrt:baseline -- --init <url>` | Generate baseline screenshots |
+| VRT Assert | `npm run vrt:assert` | Run visual regression tests with Three-Image Context |
+| Visual Impact | `npm run visual:impact` | Analyze git diff for visual impact |
+| Feasibility | `npm run feasibility` | Check contract technical viability before build |
 
 ---
 
@@ -361,16 +385,19 @@ Use RFC 2119 keywords: SHALL (mandatory), MUST (absolute), SHOULD (recommended),
 
 ## Scoring System
 
-### Visual Audit Scoring
+### Visual Audit Scoring (v0.4.0)
 
 | Dimension | Weight | What It Checks |
 |-----------|--------|---------------|
-| Color Fidelity | 25% | All colors match Contract (CIEDE2000) |
-| Typography Fidelity | 20% | Font family, size, weight match |
-| Spacing Fidelity | 20% | Padding, margin, gap match |
-| Radius Fidelity | 15% | Border-radius matches |
+| Contract Assertion | 40% | All compiled assertions from design.md PASS (gate-keeping) |
+| Color Fidelity | 15% | All colors match Contract (CIEDE2000) |
+| Typography Fidelity | 15% | Font family, size, weight match |
+| Spacing Fidelity | 15% | Padding, margin, gap match |
 | Layout Fidelity | 15% | Structure, alignment, positioning |
+| Radius Fidelity | 5% | Border-radius matches |
 | Shadow Fidelity | 5% | Box-shadow matches |
+
+**Gate-keeping rule**: If ANY contract assertion FAILS, the overall score is capped at 60 regardless of other dimensions.
 
 ### API & Integration Scoring
 
@@ -426,11 +453,22 @@ Engineer (reads audit report + memory + contracts, fixes issues)
     ↓
 Update agent memory file
     ↓
-Auditor (fresh subagent, but with memory, re-audits)
+Three-Layer Verification (for visual bugs):
+  Layer 1: Contract Assertion → ALL PASS?
+  Layer 2: VRT → diff < 1%?
+  Layer 3: Human Confirmation → y/n/u? (if AI fix fails 2x)
     ↓
 If score ≥ threshold → PASS → proceed to NEXT audit phase
 If score < threshold → Loop again
 ```
+
+**Three-Layer Visual Verification** (new in v0.4):
+
+1. **Contract Assertion** (deterministic) — Playwright checks layout, spacing, alignment, color against compiled assertions.json. No LLM involved.
+2. **VRT** (perceptual) — Pixel-level comparison with Three-Image Context (Baseline/Actual/Diff). If diff ≥ 1%, Visual Auditor generates Visual_Fix_Spec.
+3. **Human Confirmation** (HITL) — When AI fix fails twice, screenshots are shown to the user for y/n/u input. `u` updates the baseline with drift logging.
+
+**Baseline Drift Protection**: All baseline updates are logged to `test/vrt/changelog.vrt.md` with timestamp, component name, diff rate, and `[WARN] Baseline drift` tag.
 
 **Arbiter Mechanism**: When the Fix Loop reaches 2 consecutive failures, the System Architect is invoked as Arbiter. The Arbiter reviews the contract, the code, and the audit reports, then issues a binding **Directive**. If the Directive still fails → HUMAN_INTERVENTION.
 

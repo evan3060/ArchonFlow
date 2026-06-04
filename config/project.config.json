@@ -4,7 +4,7 @@
   "project": {
     "name": "",
     "description": "",
-    "version": "0.3.0",
+    "version": "0.4.0",
 
     "techStack": {
       "framework": "",
@@ -193,6 +193,43 @@
       "enabled": true,
       "calculationScript": "scripts/visual-diff.ts",
       "interpretationOnly": true
+    },
+    "contractAssertion": {
+      "enabled": true,
+      "compilerScript": "scripts/contract-compiler.ts",
+      "assertionScript": "scripts/contract-assert.ts",
+      "assertionsFile": "assertions.json",
+      "gateKeeping": true
+    },
+    "vrt": {
+      "enabled": true,
+      "baselineScript": "scripts/vrt-baseline.ts",
+      "assertionScript": "scripts/vrt-assert.ts",
+      "baselinesDir": "test/vrt/baselines",
+      "resultsDir": "test/vrt/results",
+      "maxDiffPixelRatio": 0.01,
+      "maskSelectors": [
+        "[data-vrt-mask]",
+        ".timestamp",
+        ".avatar",
+        ".ad-banner",
+        "video",
+        "canvas",
+        "iframe"
+      ],
+      "maskColor": "#808080",
+      "driftProtection": true,
+      "changelogFile": "test/vrt/changelog.vrt.md"
+    },
+    "visualImpactAnalysis": {
+      "enabled": true,
+      "script": "scripts/visual-impact.ts",
+      "autoTriggerVrt": true
+    },
+    "feasibilityCheck": {
+      "enabled": true,
+      "script": "scripts/feasibility-check.ts",
+      "blockOnFail": true
     }
   },
 
