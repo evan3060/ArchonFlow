@@ -12,7 +12,7 @@ Initialize ArchonFlow in the current project. This skill sets up the directory s
 Run this skill once after installing the ArchonFlow plugin:
 
 ```
-/plugin marketplace add evan3060/ArchonFlow
+/plugin marketplace add https://github.com/evan3060/ArchonFlow.git
 /plugin install archonflow
 /archonflow:init
 ```
@@ -31,7 +31,7 @@ Verify the plugin is installed by checking for `agents/` and `skills/` directori
 If the plugin is not found, stop and inform the user:
 
 > ArchonFlow plugin not found. Please install it first:
-> `/plugin marketplace add evan3060/ArchonFlow`
+> `/plugin marketplace add https://github.com/evan3060/ArchonFlow.git`
 > `/plugin install archonflow`
 
 ### 2. Create Directory Structure

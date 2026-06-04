@@ -234,7 +234,7 @@ ArchonFlow uses Claude Code's native Subagent system. Each agent is defined in `
 
 1. Add the plugin marketplace and install:
 ```bash
-/plugin marketplace add evan3060/ArchonFlow
+/plugin marketplace add https://github.com/evan3060/ArchonFlow.git
 /plugin install archonflow
 ```
 
@@ -582,7 +582,7 @@ ArchonFlow is distributed through its own plugin marketplace. Add it first:
 
 ```bash
 # In Claude Code, add the ArchonFlow marketplace
-/plugin marketplace add evan3060/ArchonFlow
+/plugin marketplace add https://github.com/evan3060/ArchonFlow.git
 ```
 
 > **What is a plugin marketplace?** Claude Code plugins are distributed through marketplaces — curated catalogs hosted in Git repositories. You need to add a marketplace before you can install plugins from it. See [Claude Code Plugin Marketplaces](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces) for details.

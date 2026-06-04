@@ -234,7 +234,7 @@ ArchonFlow 使用 Claude Code 原生 Subagent 系统。每个 Agent 在 `agents/
 
 1. 添加插件市场并安装：
 ```bash
-/plugin marketplace add evan3060/ArchonFlow
+/plugin marketplace add https://github.com/evan3060/ArchonFlow.git
 /plugin install archonflow
 ```
 
@@ -580,7 +580,7 @@ ArchonFlow 通过自有的插件市场分发。先添加市场：
 
 ```bash
 # 在 Claude Code 中，添加 ArchonFlow 插件市场
-/plugin marketplace add evan3060/ArchonFlow
+/plugin marketplace add https://github.com/evan3060/ArchonFlow.git
 ```
 
 > **什么是插件市场？** Claude Code 插件通过市场分发——市场是托管在 Git 仓库中的策展目录。你需要先添加市场，才能从中安装插件。详见 [Claude Code 插件市场文档](https://docs.claude.com/en/docs/claude-code/plugin-marketplaces)。
