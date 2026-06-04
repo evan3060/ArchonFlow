@@ -1,6 +1,6 @@
 ---
 name: fix
-description: "Targeted bug fixing with three-layer verification (Contract Assertion → VRT → Human). Includes Arbiter mechanism for Fix Loop deadlocks and Git Reset for rollback."
+description: "Targeted bug fixing with three-layer verification (Contract Assertion → VRT → Human). Includes Arbiter mechanism for Fix Loop deadlocks, Git Reset for rollback, and context control (memory reset, surgical fix, viewport snippet)."
 ---
 
 # Fix Skill
@@ -15,6 +15,9 @@ Targeted bug fixing with three-layer verification. Fixes specific issues identif
 4. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
 5. **Git Reset in Fix Loop** — commit before fix, rollback if fix makes things worse
 6. **Three-Layer Verification** — Contract Assertion (deterministic) → VRT (perceptual) → Human (HITL)
+7. **Surgical Fix Contract** — Engineer MUST fix ONLY the violations listed in the report. No refactoring, no optimization, no changes to unrelated code
+8. **Memory Reset** — each fix iteration starts with a fresh agent session. Previous iteration history is NOT carried forward. Only current code + latest violation report
+9. **Viewport Snippet** — violation reports passed to Engineer contain ONLY FAIL items. PASS items are omitted to save context
 
 ## Usage
 
@@ -86,9 +89,9 @@ After the fix, detect bug type from changed files and run the appropriate verifi
 │                                                            │
 │ 4.1 Contract Assertion (Deterministic)                     │
 │     Run: npx ts-node scripts/contract-assert.ts            │
-│          <url> <assertions.json> <results-dir>             │
+│          <url> <assertions.json> <results-dir> --fail-only │
 │     Input: contracts/assertions.json                       │
-│     Output: Violation Report (PASS/FAIL per item)          │
+│     Output: Compact Violation Report (FAIL items only)     │
 │     If ALL PASS → proceed to 4.2                           │
 │     If ANY FAIL → Engineer MUST read Violation Report      │
 │       and fix ONLY the violated items                      │
@@ -143,25 +146,66 @@ After the fix, detect bug type from changed files and run the appropriate verifi
 
 ```
 Iteration 1:
-  1. Engineer reads audit report + memory + contracts
-  2. Engineer fixes issues
-  3. Update agent memory
+  1. [MEMORY RESET] Spawn FRESH Engineer agent (no history from previous work)
+  2. Engineer reads: current code + FAIL-only violation report + contracts
+  3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
   4. Re-run Phase 4 verification
 
 Iteration 2:
-  1. Engineer reads audit report + memory + contracts
-  2. Engineer fixes issues
-  3. Update agent memory
+  1. [MEMORY RESET] Spawn FRESH Engineer agent (no history from iteration 1)
+  2. Engineer reads: current code + FAIL-only violation report + contracts
+  3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
   4. Re-run Phase 4 verification
 
-Iteration 3 (Arbiter triggered):
-  1. Invoke @system-architect as Arbiter
-  2. Arbiter reviews contract, code, and audit reports
-  3. Arbiter issues Directive
-  4. Engineer follows Directive
-  5. Re-run Phase 4 verification
+Iteration 3 (Arbiter + Context Compress):
+  1. [CONTEXT COMPRESS] Summarize iterations 1-2 into structured state:
+     - What was tried
+     - What failed and why
+     - Current violation state
+     - Max ~500 tokens
+  2. Invoke @system-architect as Arbiter
+  3. Arbiter reviews: compressed history + contract + code + audit reports
+  4. Arbiter issues Directive
+  5. [MEMORY RESET] Spawn FRESH Engineer agent
+  6. Engineer reads: current code + Directive + compressed summary
+  7. Re-run Phase 4 verification
 
 If still fails after Arbiter → HUMAN_INTERVENTION
+```
+
+**Memory Reset Protocol**: Each fix iteration MUST spawn a new subagent instance. The Engineer must NOT carry conversation history from previous iterations. This prevents:
+- Context inflation across iterations
+- Fix attempts influenced by previous failed approaches
+- "Sunk cost" bias where the agent keeps trying variations of the same approach
+
+**Surgical Fix Contract**: The Engineer agent MUST be given this explicit instruction:
+
+> You are performing a surgical fix. You received a Violation Report listing specific failures. You are ONLY authorized to modify code that directly causes these violations. You MUST NOT:
+> - Refactor any code not mentioned in the violation report
+> - Optimize any code not mentioned in the violation report
+> - Modify any HTML structure, CSS property, or JS logic not directly related to the violations
+> - Change any code that is currently PASSING its assertions
+>
+> If CONTRACT-TAB_ITEM-ICON_LABEL_GAP reports a gap of 8px instead of 2px, you fix ONLY that gap. You do not touch the icon size, the label font, or the container layout unless they are also in the violation report.
+
+**Context Compress Protocol** (Iteration 3+): Before invoking the Arbiter, compress the fix history:
+
+```markdown
+## Fix History Summary (Compressed)
+
+### Violations (current state)
+- [FAIL] CONTRACT-TAB_ITEM-ICON_LABEL_GAP: actual=8px, expected=2px
+- [PASS] CONTRACT-TAB_ITEM-ICON_SIZE: 24x24
+
+### Attempts
+1. Iteration 1: Changed gap from 8px→4px via CSS. Result: gap=4px, still FAIL (expected 2px)
+2. Iteration 2: Changed gap from 4px→2px via CSS. Result: gap=6px (SVG padding interference)
+
+### Key Finding
+SVG icon has internal padding (2px each side) causing effective gap to be 6px even when CSS gap=2px.
+
+### Current Code State
+File: src/components/TabBar.vue (last modified: iteration 2)
 ```
 
 **Git Reset Mechanism**: If a fix attempt makes things worse (score decreases or new violations appear), rollback to the checkpoint commit and try a different approach.

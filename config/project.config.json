@@ -4,7 +4,7 @@
   "project": {
     "name": "",
     "description": "",
-    "version": "0.4.0",
+    "version": "0.4.1",
 
     "techStack": {
       "framework": "",
@@ -316,6 +316,59 @@
       "apiThreshold": 85,
       "uxThreshold": 80,
       "codeThreshold": 80
+    }
+  },
+
+  "agent_routing": {
+    "description": "Model routing configuration for agents. Vision-capable models are only invoked when visual audit is needed. Text/code models handle all other tasks for cost efficiency.",
+    "engineer": {
+      "model": "sonnet",
+      "temperature": 0.2,
+      "description": "High-throughput text/code model for implementation and fixes"
+    },
+    "visual_auditor": {
+      "model": "sonnet",
+      "vision": true,
+      "temperature": 0.0,
+      "description": "Vision-capable model for interpreting Three-Image Context and generating Visual_Fix_Spec"
+    },
+    "architect": {
+      "model": "sonnet",
+      "temperature": 0.3,
+      "description": "Reasoning model for architecture analysis and Arbiter decisions"
+    },
+    "auditor": {
+      "model": "sonnet",
+      "temperature": 0.0,
+      "description": "Deterministic model for API/UX/code auditing"
+    },
+    "fallback": {
+      "model": "sonnet",
+      "description": "Default model when no specific routing is configured"
+    }
+  },
+
+  "context_control": {
+    "description": "Context window management settings to prevent context inflation across fix iterations",
+    "memory_reset": {
+      "enabled": true,
+      "description": "Clear agent session history between fix iterations. Each iteration starts fresh with only current code + latest violation report.",
+      "max_history_iterations": 0
+    },
+    "viewport_snippet": {
+      "enabled": true,
+      "description": "Only include FAIL items in violation reports passed to Engineer. PASS items are omitted to save context.",
+      "fail_only": true
+    },
+    "surgical_fix_contract": {
+      "enabled": true,
+      "description": "Engineer is restricted to fixing ONLY the violations listed in the report. No refactoring, no optimization, no changes to unrelated code."
+    },
+    "context_compress": {
+      "enabled": true,
+      "trigger_iteration": 3,
+      "description": "On iteration 3+, compress previous fix history into a structured summary before passing to Engineer.",
+      "max_summary_tokens": 500
     }
   }
 }

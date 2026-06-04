@@ -1,7 +1,7 @@
 {
   "name": "archonflow",
-  "description": "Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review. Design Contract is Law. 10 subagents with cognitive isolation, 7 pipeline skills for contract-driven development. v0.4: Contract Assertion Layer, Three-Image Context VRT, Visual Impact Analysis, Feasibility Check.",
-  "version": "0.4.0",
+  "description": "Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review. Design Contract is Law. 10 subagents with cognitive isolation, 7 pipeline skills for contract-driven development. v0.4.1: Agent Routing, Context Control (Memory Reset, Surgical Fix, Viewport Snippet), Fail-Only Reports.",
+  "version": "0.4.1",
   "author": {
     "name": "ArchonFlow"
   },

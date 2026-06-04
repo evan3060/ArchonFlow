@@ -25,7 +25,7 @@ Display the current pipeline progress, audit scores, and changelog for all chang
 ║                                                              ║
 ║  Project: {project-name}                                     ║
 ║  Profile: {enterprise/normal/internal}                       ║
-║  Version: 0.4.0                                              ║
+║  Version: 0.4.1                                              ║
 ║                                                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Changes                                                     ║

@@ -534,9 +534,10 @@ async function runAssertions(
   };
 }
 
-function formatReport(report: AssertionReport): string {
+function formatReport(report: AssertionReport, failOnly: boolean = false): string {
   const lines: string[] = [];
   lines.push('# Contract Violation Report');
+  if (failOnly) lines.push('**(Fail-Only Mode — PASS items omitted for context efficiency)**');
   lines.push('');
   lines.push(`**Source**: ${report.source}`);
   lines.push(`**URL**: ${report.url}`);
@@ -565,13 +566,18 @@ function formatReport(report: AssertionReport): string {
     }
   }
 
-  const passes = report.results.filter(r => r.status === 'PASS');
-  if (passes.length > 0) {
-    lines.push('## Passed Assertions');
-    lines.push('');
-    for (const p of passes) {
-      lines.push(`- ${p.component} / ${p.assertion}: ${p.expected}`);
+  if (!failOnly) {
+    const passes = report.results.filter(r => r.status === 'PASS');
+    if (passes.length > 0) {
+      lines.push('## Passed Assertions');
+      lines.push('');
+      for (const p of passes) {
+        lines.push(`- ${p.component} / ${p.assertion}: ${p.expected}`);
+      }
     }
+  } else if (report.summary.pass > 0) {
+    lines.push(`## Passed: ${report.summary.pass} assertions (omitted)`);
+    lines.push('');
   }
 
   return lines.join('\n');
@@ -581,18 +587,24 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length < 2) {
-    console.log('Usage: ts-node contract-assert.ts <url> <assertions-json> [output-dir]');
+    console.log('Usage: ts-node contract-assert.ts <url> <assertions-json> [output-dir] [--fail-only]');
     console.log('');
     console.log('Runs deterministic Playwright assertions against compiled assertions.json.');
     console.log('');
+    console.log('Options:');
+    console.log('  --fail-only   Generate a compact report with FAIL items only (for context efficiency)');
+    console.log('');
     console.log('Example:');
-    console.log('  ts-node contract-assert.ts http://localhost:5173 archonflow/changes/my-feature/assertions.json test/vrt/results');
+    console.log('  ts-node contract-assert.ts http://localhost:5173 archonflow/changes/my-feature/assertions.json test/vrt/results --fail-only');
     process.exit(1);
   }
 
-  const url = args[0];
-  const assertionsPath = path.resolve(args[1]);
-  const outputDir = path.resolve(args[2] || 'test/vrt/results');
+  const failOnly = args.includes('--fail-only');
+  const positionalArgs = args.filter(a => !a.startsWith('--'));
+
+  const url = positionalArgs[0];
+  const assertionsPath = path.resolve(positionalArgs[1]);
+  const outputDir = path.resolve(positionalArgs[2] || 'test/vrt/results');
 
   if (!fs.existsSync(assertionsPath)) {
     console.error(`Error: Assertions file not found: ${assertionsPath}`);
@@ -624,18 +636,18 @@ async function main() {
     console.log('Running contract assertions...');
     const report = await runAssertions(page, assertionsFile);
 
-    // Save JSON report
+    // Save JSON report (always full)
     const jsonPath = path.join(outputDir, 'contract-assertion-report.json');
     fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2));
 
-    // Save Markdown report
-    const mdPath = path.join(outputDir, 'contract-violation-report.md');
-    fs.writeFileSync(mdPath, formatReport(report));
+    // Save Markdown report (full or fail-only)
+    const mdPath = path.join(outputDir, failOnly ? 'contract-violation-report-compact.md' : 'contract-violation-report.md');
+    fs.writeFileSync(mdPath, formatReport(report, failOnly));
 
     console.log('');
     console.log(`Results: ${report.summary.pass} PASS, ${report.summary.fail} FAIL out of ${report.summary.total}`);
     console.log(`JSON report: ${jsonPath}`);
-    console.log(`Markdown report: ${mdPath}`);
+    console.log(`Markdown report: ${mdPath}${failOnly ? ' (fail-only)' : ''}`);
 
     if (report.summary.fail > 0) {
       console.log('');

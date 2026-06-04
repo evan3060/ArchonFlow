@@ -80,6 +80,50 @@ Design Export (any tool)
 
 ---
 
+## What's New in v0.4.1
+
+| Feature | Description |
+|---------|-------------|
+| **Agent Routing** | Model configuration per agent role — vision models only invoked for visual audit, text/code models for implementation |
+| **Memory Reset** | Each fix iteration spawns a fresh agent session — no history carry-over prevents context inflation and sunk-cost bias |
+| **Surgical Fix Contract** | Engineer restricted to fixing ONLY violations in the report — no refactoring, no optimization, no unrelated changes |
+| **Viewport Snippet** | Violation reports passed to Engineer contain ONLY FAIL items — PASS items omitted for context efficiency |
+| **Context Compress** | On iteration 3+, fix history is compressed into ~500 token summary before Arbiter invocation |
+| **Fail-Only Reports** | `contract-assert.ts --fail-only` generates compact reports with FAIL items only |
+
+### Design Trade-offs (v0.4 → v0.4.1)
+
+The v0.4.1 upgrade addresses two architectural concerns raised by domain experts:
+
+1. **Vision model cost** — running a vision-capable model for all tasks (code writing, API design) wastes tokens and increases latency
+2. **Context inflation** — fix iterations accumulate history, causing the model to "lose focus" and make broader changes than needed
+
+**Key trade-offs:**
+
+| Decision | Chosen | Rejected | Why |
+|----------|--------|----------|-----|
+| Model routing | Per-role config (engineer vs visual_auditor) | Single model for all | Vision models are expensive; text models are faster for code |
+| Fix iteration context | Fresh session each iteration | Carry full history | History inflates context; fresh start = focused fix |
+| Violation report scope | FAIL-only (Viewport Snippet) | Full PASS+FAIL report | Engineer only needs to know what's broken, not what works |
+| Fix scope | Surgical (only reported violations) | Open-ended improvement | Open-ended fixes introduce new bugs ("画蛇添足") |
+| Iteration 3+ context | Compressed summary (~500 tokens) | Full iteration history | Arbiter needs pattern, not detail |
+
+---
+
+## Roadmap: v0.5.0
+
+Planned architectural upgrades for the next major version:
+
+| Feature | Description | Status |
+|---------|-------------|--------|
+| **Vision Adapter Gateway** | Unified API gateway for multi-vendor vision models (GPT-4o, Claude Vision, etc.) with automatic failover | Planned |
+| **Graceful Degradation** | When vision model is unavailable, fall back to blind text-diff mode instead of blocking the pipeline | Planned |
+| **Agent Communication Protocol** | Standardized JSON schema for inter-agent message passing, replacing ad-hoc markdown | Planned |
+| **Control/Data Plane Separation** | Formal separation of control context (<2k tokens) from working memory and evidence store | Planned |
+| **Context Compressor Agent** | Dedicated agent that compresses iteration history into structured state summaries | Planned |
+
+---
+
 ## What's New in v0.4
 
 | Feature | Description |

@@ -10,6 +10,7 @@ disallowedTools:
   - Write
   - Edit
 model: sonnet
+vision: true
 ---
 
 # Visual Auditor (Judge Mode)
