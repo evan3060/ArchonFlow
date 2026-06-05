@@ -61,8 +61,10 @@ Design Export (any tool)
   └─────────────────────────────────────────────────────────┘
         ↓
   ┌─ /archonflow:fix "<bug>" ───────────────────────────────┐
-  │  Bug Analysis         ← Root cause from audit reports   │
-  │  Git Checkpoint       ← Commit before fix (rollback)    │
+  │  Bug Analysis         ← Formulate hypotheses            │
+  │  Git Checkpoint       ← Commit before diagnostics       │
+  │  Diagnostic Experiment← Prove/disprove hypotheses       │
+  │  Root Cause Gate      ← No fix without proven cause     │
   │  Targeted Fix         ← Frontend/Backend Engineer       │
   │  Re-audit             ← Verify fix passes threshold     │
   │  Fix Loop             ← Max 3 iterations + Arbiter      │
@@ -77,6 +79,38 @@ Design Export (any tool)
         ↓
   Ship
 ```
+
+---
+
+## What's New in v0.4.2
+
+| Feature | Description |
+|---------|-------------|
+| **Diagnostic Experiment** | Phase 2.5: structured hypothesis-disprove cycle before any code modification — inject destructive diagnostic code, collect hard data, git checkout to clean up |
+| **Root Cause Gate** | Phase 2.7: hard gate that blocks Phase 3 (Targeted Fix) until root cause is proven with supporting evidence + at least 1 disprove experiment |
+| **Excluded Hypotheses** | `excluded_hypotheses.json` persists across Fix Loop iterations — fresh Engineers receive disproved hypotheses to prevent repeating failed approaches |
+| **Active Disprove** | Diagnostic experiments must include at least 1 counter-evidence experiment that could DISPROVE the leading hypothesis — breaks Confirmation Bias |
+| **Diagnostic Cleanup** | `git checkout .` after Phase 2.5 erases all injected diagnostic code, ensuring Phase 3 starts from a clean state |
+
+### Design Trade-offs (v0.4.1 → v0.4.2)
+
+The v0.4.2 upgrade was driven by a real-world incident: a Tab Bar icon clipping bug was "fixed" 8+ times without success. Root cause analysis revealed:
+
+1. **All 8 iterations guessed the same wrong cause** — "box model overlap" — without ever measuring the actual DOM. Playwright boundingBox later proved a 2px gap existed (no overlap at all).
+2. **Confirmation Bias** — once "FILL=1 causes rendering bug" was hypothesized, all subsequent experiments only looked for supporting evidence, never counter-evidence. Testing all 5 icons with FILL=1 would have revealed only the `home` icon was affected.
+3. **Memory Reset lost critical negative knowledge** — each fresh Engineer didn't know "box model overlap" was already disproved, so they tried it again.
+
+**Key trade-offs:**
+
+| Decision | Chosen | Rejected | Why |
+|----------|--------|----------|-----|
+| Root cause verification | Structured Diagnostic Experiment (Phase 2.5) | Trust Bug Analysis reasoning | Reading code ≠ measuring reality; 8 rounds of "fix" proved reasoning alone is unreliable |
+| Code modification gate | Root Cause Gate (Phase 2.7) | Allow Engineer to fix immediately | Unproven root cause = wrong fix = wasted iterations and code degradation |
+| Disprove requirement | At least 1 counter-evidence experiment | Only supporting evidence | Confirmation Bias is the #1 failure mode; active disprove breaks the cycle |
+| Cross-iteration knowledge | excluded_hypotheses.json | Full history carry-over | Full history inflates context; only negative knowledge (what NOT to try) is essential |
+| Diagnostic code injection | Explicitly authorized (destructive) | Prohibited | Isolation experiments require temporary code changes; Git Checkpoint guarantees rollback |
+| Diagnostic cleanup | `git checkout .` after Phase 2.5 | Manual cleanup | Manual cleanup is error-prone; git checkout is atomic and guaranteed clean |
+| Skeptic Agent | Embedded in Diagnostic Experiment | Separate Agent | Disprove step achieves the same goal without coordination overhead |
 
 ---
 

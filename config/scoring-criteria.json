@@ -1,6 +1,6 @@
 {
-  "version": "0.4.1",
-  "description": "Scoring criteria for visual fidelity audit in ArchonFlow — v0.4.1 adds contract_assertion gate-keeping dimension",
+  "version": "0.4.2",
+  "description": "Scoring criteria for visual fidelity audit in ArchonFlow — v0.4.2 adds contract_assertion gate-keeping dimension",
 
   "dimensions": {
     "contract_assertion": {

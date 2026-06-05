@@ -8,7 +8,7 @@
     {
       "name": "archonflow",
       "description": "Multi-Agent Full-Stack Delivery Pipeline. Design Contract is Law. 10 subagents with cognitive isolation, 7 pipeline skills for contract-driven development.",
-      "version": "0.3.0",
+      "version": "0.4.2",
       "source": "./",
       "author": {
         "name": "ArchonFlow"

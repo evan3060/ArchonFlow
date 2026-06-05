@@ -1,11 +1,11 @@
 ---
 name: fix
-description: "Targeted bug fixing with three-layer verification (Contract Assertion → VRT → Human). Includes Arbiter mechanism for Fix Loop deadlocks, Git Reset for rollback, and context control (memory reset, surgical fix, viewport snippet)."
+description: "Targeted bug fixing with Root Cause Gate, Diagnostic Experiment, and three-layer verification. No code changes allowed until root cause is proven through hypothesis-disprove cycle."
 ---
 
 # Fix Skill
 
-Targeted bug fixing with three-layer verification. Fixes specific issues identified during verification or reported by the user, then verifies using Contract Assertion → VRT → Human Confirmation.
+Targeted bug fixing with Root Cause Gate. The key principle: **no code changes until root cause is proven**. Fixes specific issues identified during verification or reported by the user, then verifies using Contract Assertion → VRT → Human Confirmation.
 
 ## ArchonFlow Core Rules
 
@@ -16,8 +16,9 @@ Targeted bug fixing with three-layer verification. Fixes specific issues identif
 5. **Git Reset in Fix Loop** — commit before fix, rollback if fix makes things worse
 6. **Three-Layer Verification** — Contract Assertion (deterministic) → VRT (perceptual) → Human (HITL)
 7. **Surgical Fix Contract** — Engineer MUST fix ONLY the violations listed in the report. No refactoring, no optimization, no changes to unrelated code
-8. **Memory Reset** — each fix iteration starts with a fresh agent session. Previous iteration history is NOT carried forward. Only current code + latest violation report
+8. **Memory Reset** — each fix iteration starts with a fresh agent session. Previous iteration history is NOT carried forward. Only current code + latest violation report + excluded_hypotheses.json
 9. **Viewport Snippet** — violation reports passed to Engineer contain ONLY FAIL items. PASS items are omitted to save context
+10. **Root Cause Gate** — no code modification allowed until root cause is proven through hypothesis-disprove cycle. Unproven root cause → HUMAN_INTERVENTION
 
 ## Usage
 
@@ -36,7 +37,9 @@ Targeted bug fixing with three-layer verification. Fixes specific issues identif
 3. Read relevant audit reports from `archonflow/audits/` and `archonflow/reviews/`
 4. Read relevant contracts from `archonflow/contracts/` or `archonflow/changes/`
 5. Read `archonflow/changes/{change-name}/assumptions.md`
-6. Identify the root cause and affected components
+6. Read `test/vrt/diagnostics/excluded_hypotheses.json` (if exists from previous iterations)
+7. Formulate initial hypotheses about root cause
+8. Identify the affected components
 
 ### Phase 2: Git Checkpoint
 
@@ -44,6 +47,172 @@ Before making any changes:
 
 1. Git commit current state with message: `chore: checkpoint before fix — {bug description}`
 2. Record the commit hash for potential rollback
+
+### Phase 2.5: Diagnostic Experiment
+
+**Purpose**: Prove or disprove root cause hypotheses through controlled experiments BEFORE modifying business code.
+
+**Authorization**: In this phase, you are explicitly authorized and encouraged to inject "destructive diagnostic code" into source files — temporary CSS overrides, element removal, style injection, DOM measurement scripts. Phase 2's Git Checkpoint guarantees a clean rollback.
+
+```
+┌─ Phase 2.5: Diagnostic Experiment ─────────────────────────┐
+│                                                             │
+│ Step 1: List Hypotheses                                     │
+│   - List all plausible root cause hypotheses (max 5)        │
+│   - Check excluded_hypotheses.json to avoid retrying        │
+│     already-disproved hypotheses                            │
+│                                                             │
+│ Step 2: Design Experiments                                  │
+│   - For each hypothesis, design a MINIMUM experiment        │
+│     that can prove or disprove it                           │
+│   - Preferred methods (in order):                           │
+│     a. Playwright boundingBox / computedStyle measurement   │
+│     b. Temporary CSS injection (border: 1px solid red,     │
+│        overflow: visible, etc.)                             │
+│     c. Element isolation (remove siblings, change parent)   │
+│     d. Attribute toggle (FILL=0 vs FILL=1, etc.)           │
+│                                                             │
+│ Step 3: Execute Experiments                                 │
+│   - Run experiments using Playwright or Bash                │
+│   - Collect HARD DATA: boundingBox values, computed styles, │
+│     screenshot evidence                                     │
+│   - NEVER rely on "reading code" alone as proof            │
+│                                                             │
+│ Step 4: Disprove (Active Counter-Evidence)                  │
+│   - For the leading hypothesis, design at least ONE         │
+│     experiment that could DISPROVE it                       │
+│   - Example: if "FILL=1 causes rendering bug" is the       │
+│     hypothesis, test ALL icons with FILL=1, not just the    │
+│     broken one                                              │
+│   - If counter-evidence disproves the hypothesis,           │
+│     go back to Step 1 with refined hypotheses               │
+│                                                             │
+│ Step 5: Output Diagnostic Report                            │
+│   - Write structured report to                              │
+│     test/vrt/diagnostics/diagnostic-report.json             │
+│   - Update excluded_hypotheses.json                         │
+│                                                             │
+│ Step 6: Cleanup                                             │
+│   - Run: git checkout .                                     │
+│   - This erases ALL diagnostic code injected during         │
+│     experiments, ensuring Phase 3 starts from a             │
+│     clean state                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Diagnostic Report Format** (`test/vrt/diagnostics/diagnostic-report.json`):
+
+```json
+{
+  "bugDescription": "Tab Bar icon clipped by text below",
+  "timestamp": "2026-06-05T10:30:00Z",
+  "hypotheses": [
+    {
+      "id": "H1",
+      "description": "Box model overlap: icon.bottom > label.top",
+      "experiment": "Playwright boundingBox measurement",
+      "evidence": "icon.bottom=807px, label.top=809px, gap=2px — NO overlap",
+      "conclusion": "DISPROVED"
+    },
+    {
+      "id": "H2",
+      "description": "Container overflow clipping",
+      "experiment": "Ancestor chain overflow audit + inject overflow:visible",
+      "evidence": "All ancestors have overflow:visible, no clip/contain/transform",
+      "conclusion": "DISPROVED"
+    },
+    {
+      "id": "H3",
+      "description": "FILL=1 font-variation-settings causes home glyph rendering defect",
+      "experiment": "FILL=0 vs FILL=1 comparison on all 5 icons",
+      "evidence": "FILL=0: all icons complete; FILL=1: only home is truncated",
+      "conclusion": "PARTIALLY_SUPPORTED"
+    }
+  ],
+  "disproveExperiments": [
+    {
+      "targetHypothesis": "H3",
+      "hypothesis": "If FILL=1 is the root cause, ALL icons should be truncated with FILL=1",
+      "experiment": "Set all 5 tab icons to FILL=1, screenshot each",
+      "result": "Only home truncated; other 4 icons render correctly with FILL=1",
+      "conclusion": "FILL=1 alone is not sufficient; home glyph has specific sensitivity"
+    }
+  ],
+  "rootCause": "Home icon glyph renders defectively under FILL=1 + opsz=24 combination; other icons are unaffected",
+  "rootCauseProven": true,
+  "provenBy": {
+    "supportingEvidence": 2,
+    "disproveExperiments": 1,
+    "excludedHypotheses": 2
+  },
+  "excludedHypotheses": [
+    {
+      "hypothesis": "Box model overlap",
+      "evidence": "boundingBox shows 2px gap",
+      "disprovedAt": "2026-06-05T10:30:00Z"
+    },
+    {
+      "hypothesis": "Container overflow clipping",
+      "evidence": "All ancestors overflow:visible",
+      "disprovedAt": "2026-06-05T10:35:00Z"
+    }
+  ]
+}
+```
+
+**Excluded Hypotheses File** (`test/vrt/diagnostics/excluded_hypotheses.json`):
+
+This file persists across Fix Loop iterations. When Memory Reset spawns a fresh Engineer, this file is the ONLY link to previous iterations — it prevents repeating already-disproved approaches.
+
+```json
+{
+  "bugId": "tabbar-icon-clipped",
+  "excluded": [
+    {
+      "hypothesis": "Box model overlap (icon.bottom > label.top)",
+      "evidence": "Playwright boundingBox: icon.bottom=807, label.top=809, gap=2px",
+      "disprovedAt": "2026-06-05T10:30:00Z"
+    },
+    {
+      "hypothesis": "Container overflow clipping",
+      "evidence": "Ancestor chain audit: all overflow:visible, no clip/contain/transform",
+      "disprovedAt": "2026-06-05T10:35:00Z"
+    }
+  ]
+}
+```
+
+### Phase 2.7: Root Cause Gate
+
+**This is a hard gate. Phase 3 (Targeted Fix) MUST NOT proceed unless this gate passes.**
+
+Check the following conditions:
+
+| Condition | Check | On Failure |
+|-----------|-------|------------|
+| Diagnostic report exists | `test/vrt/diagnostics/diagnostic-report.json` file exists | → HUMAN_INTERVENTION |
+| Root cause proven | `rootCauseProven === true` | → HUMAN_INTERVENTION |
+| At least 1 supporting evidence | `provenBy.supportingEvidence >= 1` | → HUMAN_INTERVENTION |
+| At least 1 disprove experiment | `provenBy.disproveExperiments >= 1` | → HUMAN_INTERVENTION |
+| All hypotheses resolved | Every hypothesis has `conclusion: SUPPORTED` or `DISPROVED` | → Return to Phase 2.5 Step 1 |
+
+**If gate passes**: proceed to Phase 3 with confirmed root cause.
+
+**If gate fails**: do NOT modify code. Output the gate failure report and trigger HUMAN_INTERVENTION:
+
+```
+⚠️ ROOT CAUSE GATE FAILED
+
+Missing: {which conditions failed}
+
+Current hypotheses:
+{list from diagnostic-report.json}
+
+Excluded hypotheses:
+{list from excluded_hypotheses.json}
+
+Action required: Provide additional evidence or clarify root cause before code modification is allowed.
+```
 
 ### Phase 3: Targeted Fix
 
@@ -55,7 +224,7 @@ Invoke: `@frontend-engineer`
 
 Memory: read `archonflow/memory/frontend-engineer.md` before invocation.
 
-Input: bug description, audit report, design contracts, relevant source code
+Input: confirmed root cause (from diagnostic-report.json), audit report, design contracts, relevant source code, excluded_hypotheses.json
 Output: fixed source code
 
 #### API/Backend Bug → Backend Engineer
@@ -64,12 +233,12 @@ Invoke: `@backend-engineer`
 
 Memory: read `archonflow/memory/backend-engineer.md` before invocation.
 
-Input: bug description, audit report, API contracts, relevant source code
+Input: confirmed root cause (from diagnostic-report.json), audit report, API contracts, relevant source code, excluded_hypotheses.json
 Output: fixed source code
 
 #### Cross-cutting Bug → Both Engineers
 
-Invoke in sequence: `@backend-engineer` then `@frontend-engineer`
+Invoke in sequence: `@backend-engineer` then `@frontend-engineer``
 
 ### Phase 4: Fix Verification
 
@@ -147,13 +316,13 @@ After the fix, detect bug type from changed files and run the appropriate verifi
 ```
 Iteration 1:
   1. [MEMORY RESET] Spawn FRESH Engineer agent (no history from previous work)
-  2. Engineer reads: current code + FAIL-only violation report + contracts
+  2. Engineer reads: current code + FAIL-only violation report + contracts + excluded_hypotheses.json
   3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
   4. Re-run Phase 4 verification
 
 Iteration 2:
   1. [MEMORY RESET] Spawn FRESH Engineer agent (no history from iteration 1)
-  2. Engineer reads: current code + FAIL-only violation report + contracts
+  2. Engineer reads: current code + FAIL-only violation report + contracts + excluded_hypotheses.json
   3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
   4. Re-run Phase 4 verification
 
@@ -164,19 +333,20 @@ Iteration 3 (Arbiter + Context Compress):
      - Current violation state
      - Max ~500 tokens
   2. Invoke @system-architect as Arbiter
-  3. Arbiter reviews: compressed history + contract + code + audit reports
+  3. Arbiter reviews: compressed history + contract + code + audit reports + excluded_hypotheses.json
   4. Arbiter issues Directive
   5. [MEMORY RESET] Spawn FRESH Engineer agent
-  6. Engineer reads: current code + Directive + compressed summary
+  6. Engineer reads: current code + Directive + compressed summary + excluded_hypotheses.json
   7. Re-run Phase 4 verification
 
 If still fails after Arbiter → HUMAN_INTERVENTION
 ```
 
-**Memory Reset Protocol**: Each fix iteration MUST spawn a new subagent instance. The Engineer must NOT carry conversation history from previous iterations. This prevents:
+**Memory Reset Protocol**: Each fix iteration MUST spawn a new subagent instance. The Engineer must NOT carry conversation history from previous iterations. However, `excluded_hypotheses.json` is ALWAYS passed to the new Engineer — this is the ONLY cross-iteration link, preventing repetition of already-disproved approaches. This prevents:
 - Context inflation across iterations
 - Fix attempts influenced by previous failed approaches
 - "Sunk cost" bias where the agent keeps trying variations of the same approach
+- Repeating already-disproved hypotheses (the key anti-pattern from the TabBar incident)
 
 **Surgical Fix Contract**: The Engineer agent MUST be given this explicit instruction:
 
@@ -226,7 +396,18 @@ Generate the fix report:
 {original bug description}
 
 ## Root Cause
-{analysis of root cause}
+{confirmed root cause from diagnostic-report.json}
+
+## Diagnostic Evidence
+| Hypothesis | Experiment | Evidence | Conclusion |
+|------------|-----------|----------|------------|
+| {H1} | {experiment} | {evidence} | DISPROVED/SUPPORTED |
+| {H2} | {experiment} | {evidence} | DISPROVED/SUPPORTED |
+
+## Disprove Experiments
+| Target | Counter-Hypothesis | Result | Conclusion |
+|--------|-------------------|--------|------------|
+| {H2} | {counter-hypothesis} | {result} | {conclusion} |
 
 ## Fix Applied
 {what was changed and why}
@@ -275,6 +456,8 @@ Save to `archonflow/changes/{change-name}/fix-report.md`
 ## Output
 
 - Fixed source code in src/
+- `test/vrt/diagnostics/diagnostic-report.json` — structured diagnostic report
+- `test/vrt/diagnostics/excluded_hypotheses.json` — disproved hypotheses (persists across iterations)
 - `archonflow/changes/{change-name}/fix-report.md` — fix report
 - `test/vrt/results/contract-violation-report.md` — assertion results
 - `test/vrt/results/vrt-report.md` — VRT results

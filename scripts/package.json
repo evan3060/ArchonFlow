@@ -1,6 +1,6 @@
 {
   "name": "archonflow",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "ArchonFlow — Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review",
   "private": true,
   "scripts": {
