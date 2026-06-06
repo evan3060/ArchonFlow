@@ -1,7 +1,7 @@
 {
   "name": "archonflow",
-  "description": "Multi-Agent Full-Stack Delivery Pipeline with TDD, Change-Based Architecture, and Two-Stage Review. Design Contract is Law. 10 subagents with cognitive isolation, 7 pipeline skills for contract-driven development. v0.4.2: Root Cause Gate, Diagnostic Experiment, Excluded Hypotheses, Active Disprove.",
-  "version": "0.4.2",
+  "description": "Multi-Agent Full-Stack Delivery Pipeline with Spec-Driven Development, Delta Spec Management, and Three-Layer Verification. Design Contract is Law. 10 subagents with cognitive isolation, 8 pipeline skills for contract-driven development. v0.5.0: Spec-Driven Development, Delta Specs, TDD RED Phase, Spec Compliance Verification, Assets Import, Archive Skill.",
+  "version": "0.5.0",
   "author": {
     "name": "ArchonFlow"
   },
