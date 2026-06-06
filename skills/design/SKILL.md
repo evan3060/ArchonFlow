@@ -31,11 +31,13 @@ Only stop for:
 
 ### Phase 1: Load Context
 
-1. Read `archonflow/changes/{change-name}/proposal.md`
-2. Read `archonflow/config/project.config.json` for project setup and profile
-3. Check `archonflow/specs/` for existing specs (incremental)
-4. Check `archonflow/contracts/` for existing contracts (incremental)
-5. Check `design-references/` for design files (auto-discovery)
+1. Read `archonflow/changes/{YYYYMMDD-change-name}/proposal.md`
+2. Read `archonflow/changes/{YYYYMMDD-change-name}/specs/` for Delta Specs from proposal phase
+3. Read `archonflow/changes/{YYYYMMDD-change-name}/tasks.md` for task breakdown
+4. Read `archonflow/config/project.config.json` for project setup and profile
+5. Check `archonflow/specs/` for existing specs (incremental)
+6. Check `archonflow/contracts/` for existing contracts (incremental)
+7. Check `design-references/` for design files (auto-discovery)
 
 ### Phase 2: Structural Analysis
 
@@ -45,11 +47,12 @@ Memory: read `archonflow/memory/system-architect.md` before invocation.
 
 Input:
 - Design export files from design-references/
-- Proposal spec from archonflow/changes/{change-name}/proposal.md
+- Proposal spec from archonflow/changes/{YYYYMMDD-change-name}/proposal.md
+- Delta Specs from archonflow/changes/{YYYYMMDD-change-name}/specs/
 - Existing source code in src/ (incremental)
 - Existing specs from archonflow/specs/ (incremental)
 
-Output: `archonflow/changes/{change-name}/analysis.md`
+Output: `archonflow/changes/{YYYYMMDD-change-name}/analysis.md`
 
 The system-architect produces:
 - Page structure and navigation hierarchy
@@ -66,13 +69,14 @@ Memory: read `archonflow/memory/design-authority.md` before invocation.
 
 Input:
 - Design export files from design-references/
-- Proposal spec from archonflow/changes/{change-name}/proposal.md
-- Structural analysis from archonflow/changes/{change-name}/analysis.md
+- Proposal spec from archonflow/changes/{YYYYMMDD-change-name}/proposal.md
+- Delta Specs from archonflow/changes/{YYYYMMDD-change-name}/specs/
+- Structural analysis from archonflow/changes/{YYYYMMDD-change-name}/analysis.md
 - Existing contracts in archonflow/contracts/ (incremental)
 - Existing tokens from src/styles/tokens/ (incremental)
 
 Output:
-- `archonflow/changes/{change-name}/design.md` — design contracts with behavioral specs
+- `archonflow/changes/{YYYYMMDD-change-name}/design/design.md` — design contracts with behavioral specs
 - `src/styles/tokens/colors.css` — color tokens
 - `src/styles/tokens/typography.css` — typography tokens
 - `src/styles/tokens/spacing.css` — spacing tokens
@@ -112,11 +116,11 @@ Invoke: `@data-architect`
 Memory: read `archonflow/memory/data-architect.md` before invocation.
 
 Input:
-- Design contracts from archonflow/changes/{change-name}/design.md
-- Proposal spec from archonflow/changes/{change-name}/proposal.md
+- Design contracts from archonflow/changes/{YYYYMMDD-change-name}/design/design.md
+- Proposal spec from archonflow/changes/{YYYYMMDD-change-name}/proposal.md
 - Existing database schema (incremental)
 
-Output: `archonflow/changes/{change-name}/data.md`
+Output: `archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md`
 
 ### Phase 5: API Contract Design + Mock Generation
 
@@ -125,13 +129,13 @@ Invoke: `@api-architect`
 Memory: read `archonflow/memory/api-architect.md` before invocation.
 
 Input:
-- Design contracts from archonflow/changes/{change-name}/design.md
-- Data layer contracts from archonflow/changes/{change-name}/data.md
-- Proposal spec from archonflow/changes/{change-name}/proposal.md
+- Design contracts from archonflow/changes/{YYYYMMDD-change-name}/design/design.md
+- Data layer contracts from archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md
+- Proposal spec from archonflow/changes/{YYYYMMDD-change-name}/proposal.md
 - Existing API contracts from archonflow/specs/ (incremental)
 
 Output:
-- `archonflow/changes/{change-name}/api.md` — API contracts with behavioral specs
+- `archonflow/changes/{YYYYMMDD-change-name}/design/api-contract.md` — API contracts with behavioral specs
 - `archonflow/mock/{page}.json` — mock data files
 - `archonflow/mock/routes.json` — mock server route configuration
 
@@ -139,7 +143,36 @@ The api-architect performs two tasks in sequence:
 1. Design API contracts with OpenAPI-level detail
 2. Generate deterministic mock data covering all scenarios
 
-### Phase 6: Implementation Plan
+### Phase 6: Assets Import
+
+Auto-discover and import design assets into the change directory.
+
+1. Scan `design-references/` for design files (Figma, Sketch, Stitch, etc.)
+2. For each discovered design file:
+   - Copy to `archonflow/changes/{YYYYMMDD-change-name}/assets/figma/` (or sketch/, stitch/)
+   - If Figma: attempt to export screenshots and design tokens via Figma API / Token plugin
+   - If Sketch: copy the .sketch file
+   - If Stitch: export JSON via API
+3. Check for user-provided seed data or config files → copy to `assets/seed/` or `assets/imports/`
+4. Record imported assets in `archonflow/changes/{YYYYMMDD-change-name}/history.md`
+
+**Assets Directory Structure**:
+```
+archonflow/changes/{YYYYMMDD-change-name}/assets/
+├── figma/                  # Figma exports (auto)
+│   ├── auth-page.fig       # Original Figma file
+│   ├── auth-page.png       # Exported design screenshot
+│   └── auth-page.tokens.json # Exported design tokens
+├── sketch/                 # Sketch exports (auto)
+├── seed/                   # Seed data (user-provided or script-generated)
+│   └── users.json
+└── imports/                # Other imported resources
+    └── google-oauth-config.json
+```
+
+If no design files are found, skip this phase and note in assumptions.md.
+
+### Phase 7: Implementation Plan
 
 After all agents complete, synthesize the implementation plan.
 
@@ -148,7 +181,7 @@ Read the module dependency map from analysis.md. Use it to:
 2. Identify parallel opportunities (independent modules)
 3. Define precision context for each build step
 
-Generate `archonflow/changes/{change-name}/plan.md`:
+Generate `archonflow/changes/{YYYYMMDD-change-name}/plan.md`:
 
 ```markdown
 # Implementation Plan: {change-name}
@@ -182,9 +215,9 @@ Generate `archonflow/changes/{change-name}/plan.md`:
 {detailed task breakdown per step}
 ```
 
-### Phase 7: Assumption Log
+### Phase 8: Assumption Log
 
-Create `archonflow/changes/{change-name}/assumptions.md`:
+Create `archonflow/changes/{YYYYMMDD-change-name}/assumptions.md`:
 
 ```markdown
 # Assumption Log: {change-name}
@@ -205,7 +238,7 @@ Create `archonflow/changes/{change-name}/assumptions.md`:
 - **FORBIDDEN**: Structural/visual assumptions are never allowed — ask Design Authority
 ```
 
-### Phase 8: Contract Self-Review
+### Phase 9: Contract Self-Review
 
 After generating all contracts, perform self-review:
 
@@ -219,14 +252,14 @@ After generating all contracts, perform self-review:
 
 Fix any issues inline.
 
-### Phase 8.5: Contract Compilation
+### Phase 9.5: Contract Compilation
 
 Compile the Layout Contract DSL tables into machine-executable assertions:
 
 ```bash
 npx ts-node scripts/contract-compiler.ts \
-  archonflow/changes/{change-name}/design.md \
-  archonflow/changes/{change-name}/assertions.json
+  archonflow/changes/{YYYYMMDD-change-name}/design/design.md \
+  archonflow/changes/{YYYYMMDD-change-name}/assertions.json
 ```
 
 This produces `assertions.json` which will be used by:
@@ -235,13 +268,13 @@ This produces `assertions.json` which will be used by:
 
 If compilation produces warnings (e.g., unrecognized property types), fix the DSL tables in design.md and re-compile.
 
-### Phase 8.6: Feasibility Check
+### Phase 9.6: Feasibility Check
 
 Before proceeding to user approval, run the feasibility check:
 
 ```bash
 npx ts-node scripts/feasibility-check.ts \
-  archonflow/changes/{change-name}/design.md \
+  archonflow/changes/{YYYYMMDD-change-name}/design/design.md \
   archonflow/config/project.config.json
 ```
 
@@ -255,7 +288,7 @@ This checks:
 If any FAIL items → fix the contract and re-run.
 If only WARNING items → document in assumptions.md and proceed.
 
-### Phase 9: User Approval Gate
+### Phase 10: User Approval Gate
 
 Present the contracts summary to the user:
 
@@ -263,7 +296,7 @@ Present the contracts summary to the user:
 
 Wait for user response. Only proceed once user approves.
 
-### Phase 10: Save and Track
+### Phase 11: Save and Track
 
 1. Copy contracts to `archonflow/contracts/` for centralized access
 2. Update `archonflow/changelog.md`:
@@ -272,24 +305,26 @@ Wait for user response. Only proceed once user approves.
 ## YYYY-MM-DD — {change-name}
 - Type: greenfield / incremental
 - Status: 🎨 Designed
-- Proposal: archonflow/changes/{change-name}/proposal.md
-- Design: archonflow/changes/{change-name}/design.md
-- API: archonflow/changes/{change-name}/api.md
-- Data: archonflow/changes/{change-name}/data.md
-- Plan: archonflow/changes/{change-name}/plan.md
+- Proposal: archonflow/changes/{YYYYMMDD-change-name}/proposal.md
+- Design: archonflow/changes/{YYYYMMDD-change-name}/design/design.md
+- API: archonflow/changes/{YYYYMMDD-change-name}/design/api-contract.md
+- Data: archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md
+- Plan: archonflow/changes/{YYYYMMDD-change-name}/plan.md
+- Assets: archonflow/changes/{YYYYMMDD-change-name}/assets/
 ```
 
 3. Git commit
 
 ## Output
 
-- `archonflow/changes/{change-name}/analysis.md` — structural analysis with module dependency map
-- `archonflow/changes/{change-name}/design.md` — design contracts with behavioral specs + Layout Contract DSL
-- `archonflow/changes/{change-name}/assertions.json` — compiled assertions from Contract Compiler
-- `archonflow/changes/{change-name}/api.md` — API contracts with behavioral specs
-- `archonflow/changes/{change-name}/data.md` — data layer contracts
-- `archonflow/changes/{change-name}/plan.md` — implementation plan with micro-tasks
-- `archonflow/changes/{change-name}/assumptions.md` — assumption log
+- `archonflow/changes/{YYYYMMDD-change-name}/analysis.md` — structural analysis with module dependency map
+- `archonflow/changes/{YYYYMMDD-change-name}/design/design.md` — design contracts with behavioral specs + Layout Contract DSL
+- `archonflow/changes/{YYYYMMDD-change-name}/design/api-contract.md` — API contracts with behavioral specs
+- `archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md` — data layer contracts
+- `archonflow/changes/{YYYYMMDD-change-name}/assertions.json` — compiled assertions from Contract Compiler
+- `archonflow/changes/{YYYYMMDD-change-name}/plan.md` — implementation plan with micro-tasks
+- `archonflow/changes/{YYYYMMDD-change-name}/assumptions.md` — assumption log
+- `archonflow/changes/{YYYYMMDD-change-name}/assets/` — imported design assets
 - `src/styles/tokens/*.css` — design token files
 - `archonflow/mock/*.json` — mock data files
 

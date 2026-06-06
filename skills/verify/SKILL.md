@@ -1,11 +1,11 @@
 ---
 name: verify
-description: "Two-stage audit: spec compliance then code quality. Fourth step in the ArchonFlow pipeline. Invokes Visual Auditor, API & Integration Auditor, UX Compliance, and Code & Backend Reviewer with Fix Loop and Arbiter mechanism."
+description: "Three-layer audit: spec compliance, contract assertion, then code quality. Fourth step in the ArchonFlow pipeline. Invokes Visual Auditor, API & Integration Auditor, UX Compliance, and Code & Backend Reviewer with Fix Loop and Arbiter mechanism. Includes Spec Compliance verification and archive readiness check."
 ---
 
 # Verify Skill
 
-Two-stage audit pipeline: spec compliance first, then code quality. Includes Fix Loop with Arbiter mechanism for deadlock resolution.
+Three-layer audit pipeline: Spec Compliance first, then Contract Assertion, then Code Quality. Includes Fix Loop with Arbiter mechanism for deadlock resolution.
 
 ## ArchonFlow Core Rules
 
@@ -14,6 +14,7 @@ Two-stage audit pipeline: spec compliance first, then code quality. Includes Fix
 3. **Design Authority has final interpretation** — disputes resolved by Authority
 4. **Cognitive Isolation** — each agent sees ONLY what it needs; auditors never see source code
 5. **Visual Audit Separation** — scripts compute differences, LLM interprets results
+6. **Spec-Driven Verification** — implementation MUST satisfy Spec Scenarios (GIVEN/WHEN/THEN) in addition to Contract Assertions
 
 ## Autonomous Execution
 
@@ -30,19 +31,49 @@ Only stop for:
 
 ### Phase 1: Pre-Verify Setup
 
-1. Read `archonflow/changes/{change-name}/design.md` — design contracts
-2. Read `archonflow/changes/{change-name}/api.md` — API contracts
-3. Read `archonflow/changes/{change-name}/data.md` — data layer contracts
-4. Read `archonflow/config/project.config.json` for thresholds and profile
-5. Start the application (if not running)
-6. Wait for application to be ready
-7. Git commit current state (for Fix Loop rollback)
+1. Read `archonflow/changes/{YYYYMMDD-change-name}/design/design.md` — design contracts
+2. Read `archonflow/changes/{YYYYMMDD-change-name}/design/api-contract.md` — API contracts
+3. Read `archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md` — data layer contracts
+4. Read `archonflow/changes/{YYYYMMDD-change-name}/specs/` — Delta Specs with Scenarios
+5. Read `archonflow/changes/{YYYYMMDD-change-name}/tests/` — test skeletons from build phase
+6. Read `archonflow/config/project.config.json` for thresholds and profile
+7. Start the application (if not running)
+8. Wait for application to be ready
+9. Git commit current state (for Fix Loop rollback)
 
-### Phase 2: Spec Compliance Audit (Stage 1)
+### Phase 2: Spec Compliance Verification (Layer 1)
+
+**Purpose**: Verify that the implementation satisfies the behavioral specifications (Spec Scenarios) from the Delta Specs. This is the highest-level verification — "does the system behave as specified?"
+
+**Process**:
+1. Read all Delta Specs from `archonflow/changes/{YYYYMMDD-change-name}/specs/`
+2. For each Requirement with Scenarios:
+   - Run the corresponding test from `archonflow/changes/{YYYYMMDD-change-name}/tests/`
+   - If test passes → Scenario SATISFIED
+   - If test fails → Scenario VIOLATED, record violation
+3. For Scenarios without automated tests:
+   - Manual verification checklist (for HITL scenarios)
+   - Record as MANUAL_VERIFICATION_NEEDED
+
+**Spec Compliance Report**:
+```markdown
+## Spec Compliance Report
+
+| Requirement | Scenario | Status | Evidence |
+|-------------|----------|--------|----------|
+| Email/Password Login | Successful login | ✅ SATISFIED | test: auth-login.spec.ts:it#1 |
+| Email/Password Login | Invalid credentials | ✅ SATISFIED | test: auth-login.spec.ts:it#2 |
+| OAuth Login | First-time OAuth login | ❌ VIOLATED | test: auth-oauth.spec.ts:it#1 — account not created |
+| Login Rate Limiting | Account lockout | ⚠️ MANUAL | no automated test |
+```
+
+**Gate**: All Spec Scenarios must be SATISFIED or MANUAL_VERIFICATION_NEEDED. Any VIOLATED Scenario blocks proceeding.
+
+### Phase 3: Contract Assertion Audit (Layer 2)
 
 Stage 1 auditors test from the OUTSIDE — they never read source code.
 
-#### 2.1 Visual Audit
+#### 3.1 Visual Audit
 
 Invoke: `@visual-auditor`
 
@@ -61,7 +92,7 @@ The visual-auditor NEVER computes color distances or pixel differences — it on
 
 Threshold: ≥ {visualThreshold from config, default 95}
 
-#### 2.2 API & Integration Audit
+#### 3.2 API & Integration Audit
 
 Invoke: `@api-integration-auditor`
 
@@ -76,7 +107,7 @@ The api-integration-auditor performs two functions:
 
 Threshold: ≥ {apiThreshold from config, default 95}
 
-#### 2.3 UX Compliance Audit
+#### 3.3 UX Compliance Audit
 
 Invoke: `@ux-compliance`
 
@@ -87,27 +118,27 @@ Output: UX compliance score and findings
 
 Threshold: ≥ {uxThreshold from config, default 90}
 
-#### Stage 1 Gate
+#### Layer 2 Gate
 
-All Stage 1 audits must pass before proceeding to Stage 2.
+All Layer 2 audits must pass before proceeding to Layer 3.
 If any audit fails, enter Fix Loop for that audit.
 
-### Phase 3: Fix Loop (Stage 1)
+### Phase 4: Fix Loop (Layer 2)
 
 For each failing audit:
 
 ```
 Iteration 1:
-  1. Engineer reads audit report + memory + contracts
-  2. Engineer fixes issues
-  3. Update agent memory
-  4. Re-audit with new subagent (but with memory)
+  1. [MEMORY RESET] Spawn FRESH Engineer agent (no history from previous work)
+  2. Engineer reads: current code + FAIL-only violation report + contracts + excluded_hypotheses.json
+  3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
+  4. Re-run Phase 4 verification
 
 Iteration 2:
-  1. Engineer reads audit report + memory + contracts
-  2. Engineer fixes issues
-  3. Update agent memory
-  4. Re-audit with new subagent (but with memory)
+  1. [MEMORY RESET] Spawn FRESH Engineer agent
+  2. Engineer reads: current code + FAIL-only report + contracts + excluded_hypotheses.json
+  3. [SURGICAL FIX CONTRACT] Engineer fixes ONLY the violations listed
+  4. Re-run Phase 4 verification
 
 Iteration 3 (Arbiter triggered):
   1. Invoke @system-architect as Arbiter
@@ -121,11 +152,11 @@ If still fails after Arbiter → HUMAN_INTERVENTION
 
 **Git Reset Mechanism**: Before each fix attempt, the current code state is committed. If a fix makes things worse, reset to the pre-fix commit and try a different approach.
 
-### Phase 4: Code Quality Review (Stage 2)
+### Phase 5: Code Quality Review (Layer 3)
 
-Stage 2 reviewers READ source code for quality assessment.
+Layer 3 reviewers READ source code for quality assessment.
 
-#### 4.1 Code & Backend Review
+#### 5.1 Code & Backend Review
 
 Invoke: `@code-backend-reviewer`
 
@@ -140,16 +171,16 @@ The code-backend-reviewer performs two functions:
 
 Threshold: ≥ {codeThreshold from config, default 85}
 
-#### Stage 2 Gate
+#### Layer 3 Gate
 
 Code quality must pass before proceeding.
 If it fails, enter Fix Loop for code quality.
 
-### Phase 5: Fix Loop (Stage 2)
+### Phase 6: Fix Loop (Layer 3)
 
-Same Fix Loop mechanism as Stage 1, but for code quality issues.
+Same Fix Loop mechanism as Layer 2, but for code quality issues.
 
-### Phase 6: Final Report
+### Phase 7: Final Report
 
 After all audits pass, generate the final verification report:
 
@@ -160,14 +191,19 @@ After all audits pass, generate the final verification report:
 - Overall: ✅ PASS / ❌ FAIL
 - Date: {timestamp}
 
-## Stage 1: Spec Compliance
+## Layer 1: Spec Compliance
+| Requirement | Scenario | Status | Evidence |
+|-------------|----------|--------|----------|
+| {requirement} | {scenario} | ✅/❌/⚠️ | {evidence} |
+
+## Layer 2: Contract Assertion
 | Auditor | Score | Threshold | Status |
 |---------|-------|-----------|--------|
 | Visual Auditor | {score} | ≥ {threshold} | ✅/❌ |
 | API & Integration Auditor | {score} | ≥ {threshold} | ✅/❌ |
 | UX Compliance | {score} | ≥ {threshold} | ✅/❌ |
 
-## Stage 2: Code Quality
+## Layer 3: Code Quality
 | Reviewer | Score | Threshold | Status |
 |----------|-------|-----------|--------|
 | Code & Backend Reviewer | {score} | ≥ {threshold} | ✅/❌ |
@@ -189,9 +225,28 @@ After all audits pass, generate the final verification report:
 1. {recommendation}
 ```
 
-Save to `archonflow/changes/{change-name}/verify-report.md`
+Save to `archonflow/changes/{YYYYMMDD-change-name}/verify-report.md`
 
-### Phase 7: Save and Track
+### Phase 8: Archive Readiness Check
+
+If all three layers pass, check archive readiness and notify the user:
+
+```
+✅ Verification PASSED — all specs, contracts, and code quality satisfied.
+
+📦 This change is ready to archive.
+Run /archonflow:archive {YYYYMMDD-change-name} to:
+  - Merge Delta Specs into archonflow/specs/
+  - Move change to archonflow/archive/
+  - Update archonflow/changelog.md
+  - Update version number
+
+Or continue with other changes.
+```
+
+**Do NOT auto-archive**. The user decides when to archive.
+
+### Phase 9: Save and Track
 
 1. Update `archonflow/changelog.md`:
 
@@ -199,25 +254,26 @@ Save to `archonflow/changes/{change-name}/verify-report.md`
 ## YYYY-MM-DD — {change-name}
 - Type: greenfield / incremental
 - Status: ✅ Verified
-- Proposal: archonflow/changes/{change-name}/proposal.md
-- Design: archonflow/changes/{change-name}/design.md
-- API: archonflow/changes/{change-name}/api.md
-- Data: archonflow/changes/{change-name}/data.md
-- Plan: archonflow/changes/{change-name}/plan.md
-- Verify: archonflow/changes/{change-name}/verify-report.md
+- Proposal: archonflow/changes/{YYYYMMDD-change-name}/proposal.md
+- Design: archonflow/changes/{YYYYMMDD-change-name}/design/design.md
+- API: archonflow/changes/{YYYYMMDD-change-name}/design/api-contract.md
+- Data: archonflow/changes/{YYYYMMDD-change-name}/design/data-contract.md
+- Plan: archonflow/changes/{YYYYMMDD-change-name}/plan.md
+- Tests: archonflow/changes/{YYYYMMDD-change-name}/tests/
+- Verify: archonflow/changes/{YYYYMMDD-change-name}/verify-report.md
+- Archive: ready / not ready
 ```
 
-2. Archive to `archonflow/specs/` if all audits pass
-3. Git commit
+2. Git commit
 
 ## Output
 
-- `archonflow/changes/{change-name}/verify-report.md` — verification report
+- `archonflow/changes/{YYYYMMDD-change-name}/verify-report.md` — verification report
 - `archonflow/audits/*.md` — individual audit reports
 - `archonflow/reviews/*.md` — code review reports
 - Updated agent memory files
 
 ## Next Step
 
-If all audits pass → project is ready for release.
+If all audits pass → user can run `/archonflow:archive` to archive the change.
 If any audit fails after max iterations → invoke `/archonflow:fix` for targeted bug fixing.

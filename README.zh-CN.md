@@ -82,6 +82,43 @@ AI 编码代理能写代码，但它们不知道什么叫"写对了"。存在两
 
 ---
 
+## v0.5.0 新特性
+
+| 特性 | 说明 |
+|------|------|
+| **Spec-Driven Development** | 行为规范（SHALL/MUST + GIVEN/WHEN/THEN）从提案自动生成为 Delta Specs |
+| **Delta Spec 管理** | ADDED/MODIFIED/REMOVED 需求，遵循 OpenSpec 约定，归档时合并到 Source of Truth |
+| **任务拆解** | 原子化、可验证的任务，每个任务可追溯到 Spec Requirement + Scenario |
+| **TDD RED 阶段** | 从 Spec Scenarios 自动生成测试骨架，先写测试再实现（真正的 TDD：RED → GREEN） |
+| **Spec 合规验证** | Layer 1 审计：在契约断言前验证实现是否满足 Spec Scenarios |
+| **资源导入** | 自动发现并导入 Figma/Sketch/Stitch 设计文件到变更目录 |
+| **归档技能** | 合并 Delta Specs → Source of Truth，移动到归档目录，更新变更日志 |
+| **历史追踪** | 结构化生命周期日志：日期、阶段、事件、Agent、Git Hash、摘要 |
+| **时间标签变更** | `{YYYYMMDD-change-name}` 格式，自然时间排序 |
+| **设计目录** | 契约合并到 `design/` 目录，与设计决策放在一起 |
+
+### 设计权衡（v0.4.2 → v0.5.0）
+
+v0.5.0 升级源于真实事故（TabBar 8轮修复失败）和对 ArchonFlow 规范管理空白的深度分析。关键洞察：
+
+1. **契约 ≠ 规范** — 契约验证属性值（icon.height === 24px），但规范验证行为（用户 SHALL 看到完整图标）。TabBar 事故表明，契约通过不代表用户的问题被解决。
+2. **缺乏变更可追溯性** — 每个版本的变更散落在多个文件中，没有结构化记录什么被添加/修改/删除以及原因。
+3. **TDD 不完整** — 测试和实现同时编写，而非先写测试。真正的 TDD 要求先写测试（RED），再写实现（GREEN）。
+
+**关键权衡：**
+
+| 决策 | 选择 | 放弃 | 原因 |
+|------|------|------|------|
+| Spec 格式 | OpenSpec Delta（ADDED/MODIFIED/REMOVED） | 自由格式变更日志 | Delta 格式支持机器可合并的规范演进 |
+| Spec 生成 | 从提案自动提取 | 手动编写 | 手动规范永远不会被写出来；自动提取确保覆盖 |
+| TDD 时机 | 从 Spec Scenarios 生成测试骨架（先 RED） | 测试与实现同时编写 | 真正的 TDD：测试在代码存在前定义预期行为 |
+| 验证层次 | 3层（Spec → Contract → Code） | 2层（Contract → Code） | Spec 层捕获"属性正确但行为错误"的 Bug |
+| 归档触发 | 用户在 verify 通过后手动触发 | verify 通过后自动归档 | 用户可能想批量处理多个变更后再归档 |
+| Spec 目录 | `archonflow/specs/`（合并后） | 仅变更级 specs | Source of Truth 必须集中化以检测冲突 |
+| 设计目录 | `design/`（决策 + 契约） | 分离的 `design.md` + `contracts/` | 设计决策和契约不可分割——为什么这样设计和标准是什么 |
+
+---
+
 ## v0.4.2 新特性
 
 | 特性 | 说明 |
@@ -144,7 +181,7 @@ v0.4.1 升级解决领域专家提出的两个架构问题：
 
 ---
 
-## 路线图：v0.5.0
+## 路线图：v0.6.0
 
 下一个大版本的架构升级计划：
 
@@ -155,6 +192,7 @@ v0.4.1 升级解决领域专家提出的两个架构问题：
 | **Agent 通信协议** | 标准化 JSON Schema 用于 Agent 间消息传递，替代临时 Markdown | 计划中 |
 | **控制/数据面分离** | 正式分离控制上下文（<2k tokens）、工作记忆和证据存储 | 计划中 |
 | **上下文压缩 Agent** | 专用 Agent 将迭代历史压缩为结构化状态摘要 | 计划中 |
+| **Spec 验证引擎** | 自动验证 Delta Spec 格式、场景可测试性和跨规范一致性 | 计划中 |
 
 ---
 
@@ -238,12 +276,13 @@ ArchonFlow 支持两种模式，在立项阶段决定：
 | 技能 | 命令 | 功能 |
 |------|------|------|
 | 初始化 | `/archonflow:init` | 创建目录结构、复制运行时文件、配置项目 |
-| 提案 | `/archonflow:proposal` | 上下文感知问答 → 提案规格（全新/增量） |
-| 设计 | `/archonflow:design` | 生成设计契约、API 契约、数据层、计划 + 编译断言 + 可行性检查 |
-| 构建 | `/archonflow:build` | TDD 实现（数据 → 后端 → 前端） |
-| 验证 | `/archonflow:verify` | 两阶段审计 + Fix Loop + Arbiter |
-| 修复 | `/archonflow:fix "<描述>"` | 定向 Bug 修复 + 三层验证（断言→VRT→HITL） |
-| 状态 | `/archonflow:status` | 显示流水线进度、评分、变更日志 |
+| 提案 | `/archonflow:proposal` | 上下文感知问答 → 提案 + Delta Specs + 任务拆解 |
+| 设计 | `/archonflow:design` | 生成设计契约、API 契约、数据层、计划 + 编译断言 + 资源导入 |
+| 构建 | `/archonflow:build` | TDD：从 Spec Scenarios 生成测试骨架（RED）→ 实现（GREEN） |
+| 验证 | `/archonflow:verify` | 三层审计：Spec 合规 → 契约断言 → 代码质量 |
+| 修复 | `/archonflow:fix "<描述>"` | 根因门控 + 三层验证的定向 Bug 修复 |
+| 归档 | `/archonflow:archive "<变更>"` | 合并 Delta Specs → Source of Truth，移动到归档，更新变更日志 |
+| 状态 | `/archonflow:status` | 显示流水线进度、Spec 覆盖率、评分、变更日志 |
 
 ### 验证脚本
 

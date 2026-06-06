@@ -51,6 +51,7 @@ mkdir -p archonflow/visual-reports
 mkdir -p archonflow/ux-reports
 mkdir -p archonflow/reports
 mkdir -p archonflow/mock
+mkdir -p archonflow/archive
 mkdir -p design-references
 ```
 
@@ -127,8 +128,9 @@ Directory structure created:
   archonflow/scripts/      — Visual audit scripts
   archonflow/memory/       — Agent memory (runtime)
   archonflow/changes/      — Active changes
-  archonflow/specs/        — Archived specs
+  archonflow/specs/        — Source of Truth behavioral specs
   archonflow/contracts/    — Design & API contracts
+  archonflow/archive/      — Archived changes
   design-references/       — Place design exports here
 
 Next steps:

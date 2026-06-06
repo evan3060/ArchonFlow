@@ -33,13 +33,14 @@ Targeted bug fixing with Root Cause Gate. The key principle: **no code changes u
 ### Phase 1: Bug Analysis
 
 1. Parse the bug description from user input
-2. Read `archonflow/changes/{change-name}/verify-report.md` (if exists)
+2. Read `archonflow/changes/{YYYYMMDD-change-name}/verify-report.md` (if exists)
 3. Read relevant audit reports from `archonflow/audits/` and `archonflow/reviews/`
-4. Read relevant contracts from `archonflow/contracts/` or `archonflow/changes/`
-5. Read `archonflow/changes/{change-name}/assumptions.md`
-6. Read `test/vrt/diagnostics/excluded_hypotheses.json` (if exists from previous iterations)
-7. Formulate initial hypotheses about root cause
-8. Identify the affected components
+4. Read relevant contracts from `archonflow/contracts/` or `archonflow/changes/{YYYYMMDD-change-name}/design/`
+5. Read relevant Specs from `archonflow/specs/` — check if the bug violates any Spec Scenario
+6. Read `archonflow/changes/{YYYYMMDD-change-name}/assumptions.md`
+7. Read `test/vrt/diagnostics/excluded_hypotheses.json` (if exists from previous iterations)
+8. Formulate initial hypotheses about root cause
+9. Identify the affected components
 
 ### Phase 2: Git Checkpoint
 

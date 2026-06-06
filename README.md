@@ -82,6 +82,43 @@ Design Export (any tool)
 
 ---
 
+## What's New in v0.5.0
+
+| Feature | Description |
+|---------|-------------|
+| **Spec-Driven Development** | Behavioral specifications (SHALL/MUST + GIVEN/WHEN/THEN) auto-generated from proposals as Delta Specs |
+| **Delta Spec Management** | ADDED/MODIFIED/REMOVED Requirements with OpenSpec convention, merged into Source of Truth on archive |
+| **Task Breakdown** | Atomic, verifiable tasks with Spec Requirement + Scenario traceability |
+| **TDD RED Phase** | Test skeletons auto-generated from Spec Scenarios before implementation (true TDD: RED → GREEN) |
+| **Spec Compliance Verification** | Layer 1 audit: verify implementation satisfies Spec Scenarios before Contract Assertion |
+| **Assets Import** | Auto-discover and import Figma/Sketch/Stitch design files into change directory |
+| **Archive Skill** | Merge Delta Specs → Source of Truth, move to archive, update changelog |
+| **History Tracking** | Structured lifecycle log with date, stage, event, agent, git hash, summary |
+| **Time-labeled Changes** | `{YYYYMMDD-change-name}` format for natural chronological ordering |
+| **Design Directory** | Contracts merged into `design/` directory alongside design decisions |
+
+### Design Trade-offs (v0.4.2 → v0.5.0)
+
+The v0.5.0 upgrade was driven by a real-world incident (TabBar 8-round fix failure) and deep analysis of ArchonFlow's spec management gaps. Key insights:
+
+1. **Contract ≠ Spec** — Contracts verify attribute values (icon.height === 24px), but Specs verify behavior (user SHALL see complete icon). The TabBar incident showed that passing contracts doesn't mean the user's problem is solved.
+2. **No change traceability** — each version's changes were scattered across multiple files with no structured record of what was added/modified/removed and why.
+3. **TDD was incomplete** — tests were written alongside implementation, not before it. True TDD requires tests first (RED), then implementation (GREEN).
+
+**Key trade-offs:**
+
+| Decision | Chosen | Rejected | Why |
+|----------|--------|----------|-----|
+| Spec format | OpenSpec Delta (ADDED/MODIFIED/REMOVED) | Free-form changelog | Delta format enables machine-mergeable spec evolution |
+| Spec generation | Auto-extract from proposal | Manual writing | Manual specs are never written; auto-extraction ensures coverage |
+| TDD timing | Test skeletons from Spec Scenarios (RED first) | Tests alongside implementation | True TDD: tests define expected behavior before code exists |
+| Verification layers | 3 layers (Spec → Contract → Code) | 2 layers (Contract → Code) | Spec layer catches "right attributes, wrong behavior" bugs |
+| Archive trigger | User-initiated after verify passes | Auto-archive on verify pass | User may want to batch multiple changes before archiving |
+| Spec directory | `archonflow/specs/` (merged) | Per-change specs only | Source of Truth must be centralized for conflict detection |
+| Design directory | `design/` (decisions + contracts) | Separate `design.md` + `contracts/` | Design decisions and contracts are inseparable — why they're designed that way and what the standard is |
+
+---
+
 ## What's New in v0.4.2
 
 | Feature | Description |
@@ -144,7 +181,7 @@ The v0.4.1 upgrade addresses two architectural concerns raised by domain experts
 
 ---
 
-## Roadmap: v0.5.0
+## Roadmap: v0.6.0
 
 Planned architectural upgrades for the next major version:
 
@@ -155,6 +192,7 @@ Planned architectural upgrades for the next major version:
 | **Agent Communication Protocol** | Standardized JSON schema for inter-agent message passing, replacing ad-hoc markdown | Planned |
 | **Control/Data Plane Separation** | Formal separation of control context (<2k tokens) from working memory and evidence store | Planned |
 | **Context Compressor Agent** | Dedicated agent that compresses iteration history into structured state summaries | Planned |
+| **Spec Validation Engine** | Automated validation of Delta Spec format, scenario testability, and cross-spec consistency | Planned |
 
 ---
 
@@ -238,12 +276,13 @@ No design tool exports available. You describe the page structure.
 | Skill | Command | What It Does |
 |-------|---------|-------------|
 | Init | `/archonflow:init` | Initialize directory structure, copy runtime files, configure project |
-| Proposal | `/archonflow:proposal` | Context-aware Q&A → proposal spec (greenfield/incremental) |
-| Design | `/archonflow:design` | Generate design contracts, API contracts, data layer, plan + compile assertions + feasibility check |
-| Build | `/archonflow:build` | Implement with TDD (data → backend → frontend) |
-| Verify | `/archonflow:verify` | Two-stage audit with Fix Loop and Arbiter |
-| Fix | `/archonflow:fix "<description>"` | Targeted bug fix with three-layer verification (Assertion → VRT → HITL) |
-| Status | `/archonflow:status` | Show pipeline progress, scores, changelog |
+| Proposal | `/archonflow:proposal` | Context-aware Q&A → proposal spec + Delta Specs + task breakdown |
+| Design | `/archonflow:design` | Generate design contracts, API contracts, data layer, plan + compile assertions + assets import |
+| Build | `/archonflow:build` | TDD: test skeletons from Spec Scenarios (RED) → implementation (GREEN) |
+| Verify | `/archonflow:verify` | Three-layer audit: Spec Compliance → Contract Assertion → Code Quality |
+| Fix | `/archonflow:fix "<description>"` | Targeted bug fix with Root Cause Gate and three-layer verification |
+| Archive | `/archonflow:archive "<change>"` | Merge Delta Specs → Source of Truth, move to archive, update changelog |
+| Status | `/archonflow:status` | Show pipeline progress, spec coverage, scores, changelog |
 
 ### Verification Scripts
 
